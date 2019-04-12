@@ -1,7 +1,7 @@
 {
-    "name": "homebridge-hubitat-tonesto7",
-    "description": "Hubitat plugin for HomeBridge",
-    "version": "1.5.6",
+    "name": "homebridge-hubitat-makerapi",
+    "description": "Hubitat plugin for HomeBridge with MakerAPI",
+    "version": "0.0.1",
     "license": "ISC",
     "preferGlobal": true,
     "keywords": [
@@ -12,11 +12,12 @@
     ],
     "dependencies": {
         "request": "^2.88.0",
-        "request-promise": "^4.2.2"
+        "request-promise": "^4.2.2",
+        "ws": "^6.2.1"
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/tonesto7/homebridge-hubitat-tonesto7.git"
+        "url": "https://github.com/danTapps/homebridge-hubitat-makerapi.git"
     },
     "engines": {
         "node": ">=0.12.0",
