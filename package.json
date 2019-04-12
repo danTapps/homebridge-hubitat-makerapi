@@ -1,0 +1,25 @@
+{
+    "name": "homebridge-hubitat-tonesto7",
+    "description": "Hubitat plugin for HomeBridge",
+    "version": "1.5.6",
+    "license": "ISC",
+    "preferGlobal": true,
+    "keywords": [
+        "homebridge-plugin",
+        "hubitat",
+        "homekit",
+        "homebridge"
+    ],
+    "dependencies": {
+        "request": "^2.88.0",
+        "request-promise": "^4.2.2"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tonesto7/homebridge-hubitat-tonesto7.git"
+    },
+    "engines": {
+        "node": ">=0.12.0",
+        "homebridge": ">=0.3.1"
+    }
+}
