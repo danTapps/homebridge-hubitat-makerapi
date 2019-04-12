@@ -64,7 +64,7 @@ When properly setup, you should see something like this in your Homebridge start
    <span style="color: #f92672">&quot;app_url&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;http://192.168.10.169/api/app/YOUR_APPS_ID/&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;access_token&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;THIS-SHOULD-BE-YOUR-TOKEN&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;mode_switches&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #ae81ff">true</span><span style="color: #f8f8f2"></span>
-   <span style="color: #f8f8f2">}</span>
+<span style="color: #f8f8f2">}</span>
 </pre></div>
 
 
