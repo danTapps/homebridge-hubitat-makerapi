@@ -41,10 +41,10 @@ When properly setup, you should see something like this in your Homebridge start
 * Go into the newly added Maker API app
 * Select the devices you would like to have available via HomeKit
 * At the bottom you see a few examples of access URLs. You will need two parts of this (App URL and Access Token)
- * example: <u>```http://192.168.10.169/apps/api/132/devices/[Device ID]?access_token=148fc06d-7627-40b0-8435-8d0cc31617ab```</u>
-  * The App URL is <u>```http://192.168.10.169/apps/api/132```</u>
-  * The Access Token is <u>```148fc06d-7627-40b0-8435-8d0cc31617ab```</u>
-  * Remember these two values for later
+    * example: <u>```http://192.168.10.169/apps/api/132/devices/[Device ID]?access_token=148fc06d-7627-40b0-8435-8d0cc31617ab```</u>
+        * The App URL is <u>```http://192.168.10.169/apps/api/132```</u>
+        * The Access Token is <u>```148fc06d-7627-40b0-8435-8d0cc31617ab```</u>
+    * Remember these two values for later
 * Tap <u><b>```Done```</b></u> and you are finished with the App configuration.
 
 
