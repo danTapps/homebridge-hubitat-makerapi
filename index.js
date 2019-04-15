@@ -32,6 +32,7 @@ function HE_ST_Platform(log, config) {
     // Get a full refresh every hour.
     if (!this.polling_seconds) {
         this.polling_seconds = 3600;
+        this.polling_seconds = 60;
     }
 
     // This is how often it polls for subscription data.
@@ -41,6 +42,7 @@ function HE_ST_Platform(log, config) {
     this.deviceLookup = {};
     this.firstpoll = true;
     this.attributeLookup = {};
+    this.deviceIdLookUp = [];
 }
 
 HE_ST_Platform.prototype = {
@@ -48,6 +50,15 @@ HE_ST_Platform.prototype = {
         var that = this;
         // that.log('config: ', JSON.stringify(this.config));
         var foundAccessories = [];
+        that.oldDeviceIds = that.deviceIdLookUp;
+        that.removeFromOldDevices = function(deviceid) {
+            var index = that.oldDeviceIds.indexOf(deviceid);
+            if (index > -1)
+            {
+                console.log('REMOVE DEVICEID ' + deviceid + ' FROM OLDDEVICES');
+                that.oldDeviceIds.splice(index, 1);
+            }
+        }; 
         that.log.debug('Refreshing All Device Data');
         he_st_api.getDevices(function(myList) {
             that.log.debug('Received All Device Data');
@@ -61,6 +72,8 @@ HE_ST_Platform.prototype = {
                         if (that.deviceLookup[device.deviceid]) {
                             accessory = that.deviceLookup[device.deviceid];
                             accessory.loadData(devices[i]);
+                            that.deviceIdLookUp.push(device.deviceid);
+                            that.removeFromOldDevices(device.deviceid);
                         } else {
                             accessory = new HE_ST_Accessory(that, "device", device);
                             // that.log(accessory);
@@ -70,12 +83,14 @@ HE_ST_Platform.prototype = {
                                         that.log('Device Skipped - Group ' + accessory.deviceGroup + ', Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(device));
                                     }
                                 } else {
-                                    // that.log("Device Added - Group " + accessory.deviceGroup + ", Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
+                                    that.log("Device Added - Group " + accessory.deviceGroup + ", Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
                                     that.deviceLookup[accessory.deviceid] = accessory;
+                                    that.deviceIdLookUp.push(accessory.deviceid);
                                     foundAccessories.push(accessory);
                                 }
                             }
                         }
+                        //CLEAN OLD DEVICES
                     }
                 };
                 if (myList && myList.location) {
