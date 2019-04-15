@@ -6,7 +6,9 @@ var Service,
     Characteristic,
     Accessory,
     uuid,
-    HE_ST_Accessory;
+    HE_ST_Accessory,
+    PlatformAccessory;
+const util = require('util');
 
 module.exports = function(homebridge) {
     console.log("Homebridge Version: " + homebridge.version);
@@ -14,11 +16,12 @@ module.exports = function(homebridge) {
     Characteristic = homebridge.hap.Characteristic;
     Accessory = homebridge.hap.Accessory;
     uuid = homebridge.hap.uuid;
-    HE_ST_Accessory = require('./accessories/he_st_accessories')(Accessory, Service, Characteristic, uuid, platformName);
+    PlatformAccessory = homebridge.platformAccessory;
+    HE_ST_Accessory = require('./accessories/he_st_accessories')(Accessory, Service, Characteristic, PlatformAccessory, uuid, platformName);
     homebridge.registerPlatform(pluginName, platformName, HE_ST_Platform);
 };
 
-function HE_ST_Platform(log, config) {
+function HE_ST_Platform(log, config, api) {
     this.temperature_unit = 'F';
 
     this.app_url = config['app_url'];
@@ -41,6 +44,8 @@ function HE_ST_Platform(log, config) {
     this.deviceLookup = {};
     this.firstpoll = true;
     this.attributeLookup = {};
+    this.api = api;
+    this.deviceIds = [];
 }
 
 HE_ST_Platform.prototype = {
@@ -48,9 +53,10 @@ HE_ST_Platform.prototype = {
         var that = this;
         // that.log('config: ', JSON.stringify(this.config));
         var foundAccessories = [];
-        that.log.debug('Refreshing All Device Data');
+        var foundDeviceIds = [];
+        that.log('Refreshing All Device Data');
         he_st_api.getDevices(function(myList) {
-            that.log.debug('Received All Device Data');
+            that.log('Received All Device Data ', myList);
             // success
             if (myList && myList.deviceList && myList.deviceList instanceof Array) {
                 var populateDevices = function(devices) {
@@ -58,9 +64,10 @@ HE_ST_Platform.prototype = {
                         var device = devices[i];
                         device.excludedCapabilities = that.excludedCapabilities[device.deviceid] || ["None"];
                         var accessory;
-                        if (that.deviceLookup[device.deviceid]) {
+                        if (that.deviceLookup[device.deviceid] !== undefined) {
                             accessory = that.deviceLookup[device.deviceid];
                             accessory.loadData(devices[i]);
+                            foundDeviceIds.push(device.deviceid);
                         } else {
                             accessory = new HE_ST_Accessory(that, "device", device);
                             // that.log(accessory);
@@ -70,13 +77,31 @@ HE_ST_Platform.prototype = {
                                         that.log('Device Skipped - Group ' + accessory.deviceGroup + ', Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(device));
                                     }
                                 } else {
-                                    //that.log("Device Added - Group " + accessory.deviceGroup + ", Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
+                                    that.log("Device Added - Group " + accessory.deviceGroup + ", Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
+                                    if (!that.firstpoll)
+                                        that.api.registerPlatformAccessories(pluginName, platformName, [accessory]);
                                     that.deviceLookup[accessory.deviceid] = accessory;
                                     foundAccessories.push(accessory);
+                                    foundDeviceIds.push(device.deviceid);
                                 }
                             }
                         }
                     }
+/*                    if (!that.firstpoll)
+                    {
+                        for (var i = 0; i < that.deviceIds.length; i++)
+                        {
+                            if ((foundDeviceIds.indexOf(that.deviceIds[i]) == -1) && (that.deviceLookup[that.deviceIds[i]]))
+                            {
+                                that.log("Device Removed: " + that.deviceLookup[that.deviceIds[i]].name);
+                                that.api.unregisterPlatformAccessories(pluginName, platformName,[that.deviceLookup[that.deviceIds[i]]]);
+                                // delete attributeLookup
+                                that.deleteAttributesForDevice(that.deviceIds[i]);
+                                that.deviceLookup[that.deviceIds[i]] = undefined;
+                            }
+                        }
+                    }*/
+                    that.deviceIds = foundDeviceIds;
                 };
                 if (myList && myList.location) {
                     that.temperature_unit = myList.location.temperature_scale;
@@ -98,7 +123,7 @@ HE_ST_Platform.prototype = {
         });
     },
     accessories: function(callback) {
-        this.log('Fetching ' + platformName + ' devices.');
+        this.log('Fetching ' + platformName + ' devices. This can take a while depending on the number of devices configured in MakerAPI!');
 
         var that = this;
         // var foundAccessories = [];
@@ -170,7 +195,7 @@ HE_ST_Platform.prototype = {
         this.reloadData(function(foundAccessories) {
             that.log('Unknown Capabilities: ' + JSON.stringify(that.unknownCapabilities));
             callback(foundAccessories);
-            setInterval(that.reloadData.bind(that), that.polling_seconds * 1000);
+            //setInterval(that.reloadData.bind(that), that.polling_seconds * 1000);
             he_eventsocket_SetupWebSocket(that);
         });
     },

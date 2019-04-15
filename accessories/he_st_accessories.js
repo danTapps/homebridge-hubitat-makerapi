@@ -4,10 +4,10 @@ const util = require('util');
 /*
  *   HE_ST Accessory
  */
-module.exports = function(oAccessory, oService, oCharacteristic, ouuid, platName) {
+module.exports = function(oAccessory, oService, oCharacteristic, oPlatformAccessory, ouuid, platName) {
     platformName = platName;
     if (oAccessory) {
-        Accessory = oAccessory;
+        Accessory = oPlatformAccessory || oAccessory;
         Service = oService;
         Characteristic = oCharacteristic;
         CommunityTypes = require('../lib/communityTypes')(Service, Characteristic);
