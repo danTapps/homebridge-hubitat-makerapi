@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.0.1```**
+**```Current App version: 0.1.0```**
 
 <br>
 
@@ -12,7 +12,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 #### Hubitat App:
 
-***v0.0.1*** - Ported app over from my tonesto7 version and added Websocket channel. Reworked Device Classification
+***v0.1.0*** - Ported app over from my tonesto7 version and added Websocket channel. Reworked Device Classification, HSM and modes currently not supported!!!
 
 <br>
 
@@ -62,8 +62,7 @@ When properly setup, you should see something like this in your Homebridge start
    <span style="color: #f92672">&quot;platform&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;Hubitat-MakerAPI&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;name&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;Hubitat&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;app_url&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;http://192.168.10.169/api/app/YOUR_APPS_ID/&quot;</span><span style="color: #f8f8f2">,</span>
-   <span style="color: #f92672">&quot;access_token&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;THIS-SHOULD-BE-YOUR-TOKEN&quot;</span><span style="color: #f8f8f2">,</span>
-   <span style="color: #f92672">&quot;mode_switches&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #ae81ff">true</span><span style="color: #f8f8f2"></span>
+   <span style="color: #f92672">&quot;access_token&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;THIS-SHOULD-BE-YOUR-TOKEN&quot;</span><span style="color: #f8f8f2"></span>
 <span style="color: #f8f8f2">}</span>
 </pre></div>
 
@@ -73,8 +72,5 @@ When properly setup, you should see something like this in your Homebridge start
 
  * <p><u>app_url</u> & <u>access_token</u>  <small style="color: orange; font-weight: 600;"><i>Required</i></small><br>
     This is the base URL and access token for MakerAPI, check step 1 of the installation instructions on how to obtain the value<b> Notice:</b> The app_url in the example above may be different for you.</small></p>
-
- * <p><u>mode_switches</u>  <small style="color: #f92672; font-weight: 600;"><i>Optional</i></small><br>
-    Creates virtual switches to contol Hubitat Modes. Possible values true|false. Default is false<b> Notice:</b> This feature is not supported yet.</small></p>
 
 
