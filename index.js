@@ -44,7 +44,7 @@ function HE_ST_Platform(log, config, api) {
     this.deviceLookup = {};
     this.firstpoll = true;
     this.attributeLookup = {};
-    this.api = api;
+    this.hb_api = api;
     this.deviceIds = [];
 }
 
@@ -79,7 +79,7 @@ HE_ST_Platform.prototype = {
                                 } else {
                                     that.log("Device Added - Group " + accessory.deviceGroup + ", Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
                                     if (!that.firstpoll)
-                                        that.api.registerPlatformAccessories(pluginName, platformName, [accessory]);
+                                        that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory]);
                                     that.deviceLookup[accessory.deviceid] = accessory;
                                     foundAccessories.push(accessory);
                                     foundDeviceIds.push(device.deviceid);
