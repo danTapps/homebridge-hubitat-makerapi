@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.1.0```**
+**```Current App version: 0.2.0```**
 
 <br>
 
@@ -13,6 +13,8 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 #### Hubitat App:
 
 ***v0.1.0*** - Ported app over from my tonesto7 version and added Websocket channel. Reworked Device Classification, HSM and modes currently not supported!!!
+***v0.1.2*** - Fixed bug of not updating tiles in HomeKit after an hour expired
+***v0.2.0*** - Ability to configure attributes to be ingored, added refresh functionallity that removes the need of restarting homebridge after a device selection was changed in MakerAPI, Added Valve devices
 
 <br>
 
@@ -61,9 +63,15 @@ When properly setup, you should see something like this in your Homebridge start
    <div style=" overflow:auto;width:auto;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #f8f8f2">{</span>
    <span style="color: #f92672">&quot;platform&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;Hubitat-MakerAPI&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;name&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;Hubitat&quot;</span><span style="color: #f8f8f2">,</span>
-   <span style="color: #f92672">&quot;app_url&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;http://192.168.10.169/api/app/YOUR_APPS_ID/&quot;</span><span style="color: #f8f8f2">,</span>
-   <span style="color: #f92672">&quot;access_token&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;THIS-SHOULD-BE-YOUR-TOKEN&quot;</span><span style="color: #f8f8f2"></span>
-<span style="color: #f8f8f2">}</span>
+   <span style="color: #f92672">&quot;app_url&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;http://192.168.10.169/apps/api/YOUR_APPS_ID/&quot;</span><span style="color: #f8f8f2">,</span>
+   <span style="color: #f92672">&quot;access_token&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;THIS-SHOULD-BE-YOUR-TOKEN&quot;</span><span style="color: #f8f8f2">,</span>
+   <span style="color: #f92672">&quot;polling_seconds&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">60</span><span style="color: #f8f8f2"></span>
+   <span style="color: #f92672">&quot;excluded_attributes&quot;</span><span style="color: #f8f8f2">: {</span>
+   <span style="color: lightblue">    &quot;HUBITAT-DEVICE-ID-1&quot;</span><span style="color: #f8f8f2">: [</span>
+   <span style="color: orange">       &quot;power&quot;</span><span style="color: #f8f8f2">,</span>
+   <span style="color: orange">       &quot;humidity&quot;</span>
+   <span style="color: #f8f8f2">    ]</span>
+   <span style="color: #f8f8f2">}<br>}</span>
 </pre></div>
 
 
@@ -73,4 +81,9 @@ When properly setup, you should see something like this in your Homebridge start
  * <p><u>app_url</u> & <u>access_token</u>  <small style="color: orange; font-weight: 600;"><i>Required</i></small><br>
     This is the base URL and access token for MakerAPI, check step 1 of the installation instructions on how to obtain the value<b> Notice:</b> The app_url in the example above may be different for you.</small></p>
 
+* <p><u>polling_seconds</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    Configures the how often (in seconds) the plugin should check if devices were removed or added from/to the selection in MakerAPI. Default is every 60 seconds. No need to restart homebridge anymore!</small></p>
+
+ * <p><u>excluded_attributes</u>  <small style="color: #f92672; font-weight: 600;"><i>Optional</i></small><br>
+   Defaults to None<br>Specify the Hubitat device by ID and the associated attributes you want homebridge-hubitat-makerapi to ignore. This prevents a Hubitat device from creating unwanted or redundant HomeKit accessories</small></p>
 

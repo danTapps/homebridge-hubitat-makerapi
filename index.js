@@ -27,13 +27,14 @@ function HE_ST_Platform(log, config, api) {
     this.app_url = config['app_url'];
     this.app_id = config['app_id'];
     this.access_token = config['access_token'];
+    this.excludedAttributes = config["excluded_attributes"] || [];
     this.excludedCapabilities = config["excluded_capabilities"] || [];
 
     // This is how often it does a full refresh
     this.polling_seconds = config['polling_seconds'];
     // Get a full refresh every hour.
     if (!this.polling_seconds) {
-        this.polling_seconds = 3600;
+        this.polling_seconds = 60;
     }
     this.mode_switches =  config['mode_switches'] || false;
 
@@ -45,63 +46,106 @@ function HE_ST_Platform(log, config, api) {
     this.firstpoll = true;
     this.attributeLookup = {};
     this.hb_api = api;
-    this.deviceIds = [];
 }
 
 HE_ST_Platform.prototype = {
+    refreshDeviceList: function(callback) {
+        var that = this;
+        that.log('Periodic Refresh of Device List');
+        he_st_api.getDevices(function(newDeviceList) {
+            that.log('Received All Refresh Device Data ');//, newDeviceList);
+            Object.keys(that.deviceLookup).forEach(function(key) {
+                var unregister = true;
+                for (var i = 0; i < newDeviceList.deviceList.length; i++)
+                {
+                    if (that.deviceLookup[key].deviceid === newDeviceList.deviceList[i].deviceid)
+                        unregister = false;
+                }
+                if (unregister)
+                {
+                    that.log("Device Removed - Name " + that.deviceLookup[key].name +  ', ID ' + that.deviceLookup[key].deviceid);
+                    that.hb_api.unregisterPlatformAccessories(pluginName, platformName,[that.deviceLookup[key]]);
+                    that.removeDeviceAttributeUsage(that.deviceLookup[key].deviceid);
+                    if (that.deviceLookup.hasOwnProperty(key))
+                        delete that.deviceLookup[key];
+                }
+            });   
+            for (var i = 0; i < newDeviceList.deviceList.length; i++)
+            {
+                var register = true;
+                Object.keys(that.deviceLookup).forEach(function(key) {
+                    if (that.deviceLookup[key].deviceid === newDeviceList.deviceList[i].deviceid)
+                        register = false;
+                });
+                if (register)
+                {
+                    he_st_api.getDeviceInfo(newDeviceList.deviceList[i].deviceid, function(deviceList) {
+                        for (var i = 0; i < deviceList.deviceList.length; i++)
+                        {
+                            var device = deviceList.deviceList[i];
+                            device.excludedAttributes = that.excludedAttributes[device.deviceid] || ["None"];
+                            //console.log('New device' , device);
+                            var accessory = new HE_ST_Accessory(that, "device", device);
+                            // that.log(accessory);
+                            if (accessory !== undefined) {
+                                if (accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
+                                    if (that.firstpoll) {
+                                        that.log('Device Skipped - Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(device));
+                                    }
+                                } else {
+                                    that.log("Device Added - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
+                                    that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory]);
+                                    that.deviceLookup[accessory.deviceid] = accessory;
+                                }
+                            }
+                        }
+                    }); 
+                }
+            }
+            var updateAccessories = [];
+            Object.keys(that.deviceLookup).forEach(function(key) {
+                updateAccessories.push(that.deviceLookup[key]);
+            });  
+            if (updateAccessories.length)
+                that.hb_api.updatePlatformAccessories(updateAccessories);
+        });
+    },
     reloadData: function(callback) {
         var that = this;
         // that.log('config: ', JSON.stringify(this.config));
         var foundAccessories = [];
-        var foundDeviceIds = [];
         that.log('Refreshing All Device Data');
         he_st_api.getDevices(function(myList) {
-            that.log('Received All Device Data ', myList);
+            that.log('Received All Device Data ');//, myList);
             // success
             if (myList && myList.deviceList && myList.deviceList instanceof Array) {
                 var populateDevices = function(devices) {
                     for (var i = 0; i < devices.length; i++) {
                         var device = devices[i];
-                        device.excludedCapabilities = that.excludedCapabilities[device.deviceid] || ["None"];
+                        device.excludedAttributes = that.excludedAttributes[device.deviceid] || ["None"];
+                        //console.log("DEVICE", device);
                         var accessory;
-                        if (that.deviceLookup[device.deviceid] !== undefined) {
+                        if (that.deviceLookup[device.deviceid]) {
                             accessory = that.deviceLookup[device.deviceid];
                             accessory.loadData(devices[i]);
-                            foundDeviceIds.push(device.deviceid);
                         } else {
                             accessory = new HE_ST_Accessory(that, "device", device);
                             // that.log(accessory);
                             if (accessory !== undefined) {
                                 if (accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
                                     if (that.firstpoll) {
-                                        that.log('Device Skipped - Group ' + accessory.deviceGroup + ', Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(device));
+                                        that.log('Device Skipped - Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(device));
                                     }
                                 } else {
-                                    that.log("Device Added - Group " + accessory.deviceGroup + ", Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
+                                    that.log("Device Added - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
                                     if (!that.firstpoll)
                                         that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory]);
                                     that.deviceLookup[accessory.deviceid] = accessory;
                                     foundAccessories.push(accessory);
-                                    foundDeviceIds.push(device.deviceid);
                                 }
                             }
                         }
                     }
-/*                    if (!that.firstpoll)
-                    {
-                        for (var i = 0; i < that.deviceIds.length; i++)
-                        {
-                            if ((foundDeviceIds.indexOf(that.deviceIds[i]) == -1) && (that.deviceLookup[that.deviceIds[i]]))
-                            {
-                                that.log("Device Removed: " + that.deviceLookup[that.deviceIds[i]].name);
-                                that.api.unregisterPlatformAccessories(pluginName, platformName,[that.deviceLookup[that.deviceIds[i]]]);
-                                // delete attributeLookup
-                                that.deleteAttributesForDevice(that.deviceIds[i]);
-                                that.deviceLookup[that.deviceIds[i]] = undefined;
-                            }
-                        }
-                    }*/
-                    that.deviceIds = foundDeviceIds;
                 };
                 if (myList && myList.location) {
                     that.temperature_unit = myList.location.temperature_scale;
@@ -195,7 +239,7 @@ HE_ST_Platform.prototype = {
         this.reloadData(function(foundAccessories) {
             that.log('Unknown Capabilities: ' + JSON.stringify(that.unknownCapabilities));
             callback(foundAccessories);
-            //setInterval(that.reloadData.bind(that), that.polling_seconds * 1000);
+            setInterval(that.refreshDeviceList.bind(that), that.polling_seconds * 1000);
             he_eventsocket_SetupWebSocket(that);
         });
     },
@@ -215,7 +259,14 @@ HE_ST_Platform.prototype = {
         }
         this.attributeLookup[attribute][deviceid].push(mycharacteristic);
     },
-
+    removeDeviceAttributeUsage: function(deviceid) {
+        var that = this;
+        Object.entries(that.attributeLookup).forEach((entry) => {
+            const [key, value] = entry;
+            if (that.attributeLookup[key].hasOwnProperty(deviceid))
+                delete that.attributeLookup[key][deviceid];
+        });
+    }, 
     doIncrementalUpdate: function() {
         var that = this;
         he_st_api.getUpdates(function(data) {
