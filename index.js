@@ -156,13 +156,14 @@ HE_ST_Platform.prototype = {
                                     } else {
                                         that.log("Device Added - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
                                         that.deviceLookup[uuidGen(accessory.deviceid)] = accessory;
+                                        that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory.accessory]);
                                         foundAccessories.push(accessory.accessory);
                                     }
                                 }
                             });
                         }
                     }   
-                    that.hb_api.registerPlatformAccessories(pluginName, platformName, foundAccessories);
+                    //that.hb_api.registerPlatformAccessories(pluginName, platformName, foundAccessories);
                 };
                 var updateDevices = function() {
                     if (that.firstpoll)
