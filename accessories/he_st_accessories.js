@@ -13,19 +13,25 @@ module.exports = function(oAccessory, oService, oCharacteristic, oPlatformAccess
         CommunityTypes = require('../lib/communityTypes')(Service, Characteristic);
         uuid = ouuid;
 
-        inherits(HE_ST_Accessory, Accessory);
+//        inherits(HE_ST_Accessory, Accessory);
         HE_ST_Accessory.prototype.loadData = loadData;
         HE_ST_Accessory.prototype.getServices = getServices;
     }
     return HE_ST_Accessory;
 };
 module.exports.HE_ST_Accessory = HE_ST_Accessory;
+module.exports.uuidGen = uuidGen;
+
+function uuidGen(deviceid)
+{
+    return uuid.generate('hbdev:' + platformName.toLowerCase() + ':' + deviceid);
+}
 
 function toTitleCase(str) {
     return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 }
 
-function HE_ST_Accessory(platform, group, device) {
+function HE_ST_Accessory(platform, group, device, accessory) {
 //     console.log("HE_ST_Accessory: ", platform, util.inspect(device, false, null, true));
     this.deviceid = device.deviceid;
     this.name = device.name;
@@ -33,9 +39,14 @@ function HE_ST_Accessory(platform, group, device) {
     this.state = {};
     this.device = device;
     this.unregister = false;
-    var idKey = 'hbdev:' + platformName.toLowerCase() + ':' + this.deviceid;
-    var id = uuid.generate(idKey);
-    Accessory.call(this, this.name, id);
+    var id = uuidGen(this.deviceid);
+    //Accessory.call(this, this.name, id);
+    if (accessory !== undefined)
+        this.accessory = accessory;
+    else
+        this.accessory = new Accessory(this.name, id);
+    this.accessory.name = this.name;
+    this.accessory.getServices = function() { return this.services };
     var that = this;
 
     //Removing excluded capabilities from config
@@ -46,17 +57,17 @@ function HE_ST_Accessory(platform, group, device) {
             delete device.attributes[excludedAttribute];
         }
     }
-    that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Identify, (that.device.attributes.hasOwnProperty('switch')));
-    that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Name, that.name);
-    if (device.firmwareVersion) that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.FirmwareRevision, device.firmwareVersion);
-    if (device.manufacturerName) that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Manufacturer, device.manufacturerName);
-    if (device.modelName) that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Model, `${toTitleCase(device.modelName)}`);
-    if (device.serialNumber) that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.SerialNumber, device.serialNumber);    
+    that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Identify, (that.device.attributes.hasOwnProperty('switch')));
+    that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Name, that.name);
+    if (device.firmwareVersion) that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.FirmwareRevision, device.firmwareVersion);
+    if (device.manufacturerName) that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Manufacturer, device.manufacturerName);
+    if (device.modelName) that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Model, `${toTitleCase(device.modelName)}`);
+    if (device.serialNumber) that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.SerialNumber, device.serialNumber);    
 
     that.getaddService = function(Service) {
-        var myService = that.getService(Service);
+        var myService = that.accessory.getService(Service);
         if (!myService) {
-            myService = that.addService(Service);
+            myService = that.accessory.addService(Service);
         }
         return myService;
     };
@@ -1097,9 +1108,9 @@ function loadData(data, myObject) {
     }
     if (data !== undefined) {
         this.device = data;
-        for (var i = 0; i < that.services.length; i++) {
-            for (var j = 0; j < that.services[i].characteristics.length; j++) {
-                that.services[i].characteristics[j].getValue();
+        for (var i = 0; i < that.accessory.services.length; i++) {
+            for (var j = 0; j < that.accessory.services[i].characteristics.length; j++) {
+                that.accessory.services[i].characteristics[j].getValue();
             }
         }
     } else {
@@ -1109,9 +1120,9 @@ function loadData(data, myObject) {
                 return;
             }
             this.device = data;
-            for (var i = 0; i < that.services.length; i++) {
-                for (var j = 0; j < that.services[i].characteristics.length; j++) {
-                    that.services[i].characteristics[j].getValue();
+            for (var i = 0; i < that.accessory.services.length; i++) {
+                for (var j = 0; j < that.accessory.services[i].characteristics.length; j++) {
+                    that.accessory.services[i].characteristics[j].getValue();
                 }
             }
         });
@@ -1119,5 +1130,5 @@ function loadData(data, myObject) {
 }
 
 function getServices() {
-    return this.services;
+    return this.accessory.services;
 }
