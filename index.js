@@ -256,7 +256,7 @@ HE_ST_Platform.prototype = {
             for (var j = 0; j < myUsage.length; j++) {
                 var accessory = that.deviceLookup[uuidGen(attributeSet.device)];
                 if (accessory) {
-                    console.log("setting " + accessory.device.attributes[attributeSet.attribute] + " to " + attributeSet.value + " for " + util.inspect(myUsage[j], false, 1, true));
+//                    console.log("setting " + accessory.device.attributes[attributeSet.attribute] + " to " + attributeSet.value + " for " + util.inspect(myUsage[j], false, 1, true));
                     accessory.device.attributes[attributeSet.attribute] = attributeSet.value;
                     myUsage[j].getValue();
                 }
