@@ -35,7 +35,7 @@ function HE_ST_Platform(log, config, api) {
     this.polling_seconds = config['polling_seconds'];
     // Get a full refresh every hour.
     if (!this.polling_seconds) {
-        this.polling_seconds = 60;
+        this.polling_seconds = 300;
     }
     this.mode_switches =  config['mode_switches'] || false;
 
