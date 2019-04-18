@@ -87,19 +87,12 @@ HE_ST_Platform.prototype = {
                         var unregister = true;
                         for (var i = 0; i < devices.length; i++) {
                             var uuid;
-                            if (that.deviceLookup[key] instanceof HE_ST_Accessory)
-                                uuid = that.deviceLookup[key].accessory.UUID;
-                            else
-                                uuid = that.deviceLookup[key].UUID;
-                            if (uuid === uuidGen(devices[i].id))
+                            if (that.deviceLookup[key].UUID === uuidGen(devices[i].id))
                                 unregister = false;
                         }
                         if (unregister)
                         {
-                            if (that.deviceLookup[key] instanceof HE_ST_Accessory)
-                                accessories.push(that.deviceLookup[key].accessory);
-                            else
-                                accessories.push(that.deviceLookup[key]);
+                            accessories.push(that.deviceLookup[key]);
                         }
                     });
                     if (accessories.length) {
@@ -117,61 +110,37 @@ HE_ST_Platform.prototype = {
                 var populateDevices = function(devices) {
                     for (var i = 0; i < devices.length; i++) {
                         var device = devices[i];
-                        //console.log("DEVICE", device);
                         var accessory;
                         if (that.deviceLookup[uuidGen(device.id)]) {
-                            if (that.deviceLookup[uuidGen(device.id)] instanceof HE_ST_Accessory)
-                            {
-                                accessory = that.deviceLookup[uuidGen(device.deviceid)];
-                                //accessory.loadData(devices[i]);
-                            }
-                            else {
-                                he_st_api.getDeviceInfo(device.id, function(data) {
-                                    data.excludedAttributes = that.excludedAttributes[device.deviceid] || ["None"];
-                                    accessory = new HE_ST_Accessory(that, "device", data, that.deviceLookup[uuidGen(device.deviceid)]);
-                                    if (accessory !== undefined) {
-                                        if (accessory.accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
-                                            if (that.firstpoll) {
-                                                that.log('Device Skipped - Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(device));
-                                            }
-                                            that.hb_api.unregisterPlatformAccessories(pluginName, platformName, that.deviceLookup[uuidGen(device.deviceid)]);
-                                            delete that.deviceLookup[uuidGen(device.deviceid)];
-                                        } else {
-                                            that.log("Device Added - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
-                                            that.deviceLookup[uuidGen(accessory.deviceid)] = accessory;
-                                        }
-                                    }
-                                });
-                            }
+                            accessory = that.deviceLookup[uuidGen(device.id)];
+                            //accessory.loadData(devices[i]);
                         } else { 
                             he_st_api.getDeviceInfo(device.id, function(data) {
-                                data.excludedAttributes = that.excludedAttributes[device.deviceid] || ["None"];
+                                data.excludedAttributes = that.excludedAttributes[device.id] || ["None"];
                                 accessory = new HE_ST_Accessory(that, "device", data);
                                 // that.log(accessory);
                                 if (accessory !== undefined) {
-                                    if (accessory.accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
+                                    if (accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
                                         if (that.firstpoll) {
                                             that.log('Device Skipped - Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(device));
                                         }
                                     } else {
                                         that.log("Device Added - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
                                         that.deviceLookup[uuidGen(accessory.deviceid)] = accessory;
-                                        that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory.accessory]);
-                                        foundAccessories.push(accessory.accessory);
+                                        that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory]);
+                                        foundAccessories.push(accessory);
                                     }
                                 }
                             });
                         }
                     }   
-                    //that.hb_api.registerPlatformAccessories(pluginName, platformName, foundAccessories);
                 };
                 var updateDevices = function() {
                     if (that.firstpoll)
                         return;
                     var updateAccessories = [];
                     Object.keys(that.deviceLookup).forEach(function(key) {
-                        if (that.deviceLookup[key] instanceof HE_ST_Accessory)
-                            updateAccessories.push(that.deviceLookup[key].accessory);
+                        updateAccessories.push(that.deviceLookup[key]);
                     });
                     if (updateAccessories.length)
                         that.hb_api.updatePlatformAccessories(updateAccessories);
@@ -182,6 +151,18 @@ HE_ST_Platform.prototype = {
                         that.local_hub_ip = myList.location.hubIP;
                         he_st_api.updateGlobals(that.local_hub_ip, that.local_commands);
                     }
+                }
+                var removeCachedDevices = function() {
+                    Object.keys(that.deviceLookup).forEach(function(key) {
+                        if (that.deviceLookup[key] instanceof PlatformAccessory) {
+                            that.hb_api.unregisterPlatformAccessories(pluginName, platformName, [that.deviceLookup[key]]);
+                            delete that.deviceLookup[key];
+                        }
+                    });
+                };
+                if (that.firstpoll) {
+                    that.log("Clearing cached devices");
+                    removeCachedDevices();
                 }
                 removeOldDevices(myList);
                 populateDevices(myList);

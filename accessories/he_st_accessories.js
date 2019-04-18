@@ -13,7 +13,7 @@ module.exports = function(oAccessory, oService, oCharacteristic, oPlatformAccess
         CommunityTypes = require('../lib/communityTypes')(Service, Characteristic);
         uuid = ouuid;
 
-//        inherits(HE_ST_Accessory, Accessory);
+        inherits(HE_ST_Accessory, Accessory);
         HE_ST_Accessory.prototype.loadData = loadData;
         HE_ST_Accessory.prototype.getServices = getServices;
     }
@@ -31,7 +31,7 @@ function toTitleCase(str) {
     return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 }
 
-function HE_ST_Accessory(platform, group, device, accessory) {
+function HE_ST_Accessory(platform, group, device) {
 //     console.log("HE_ST_Accessory: ", platform, util.inspect(device, false, null, true));
     this.deviceid = device.deviceid;
     this.name = device.name;
@@ -40,13 +40,8 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     this.device = device;
     this.unregister = false;
     var id = uuidGen(this.deviceid);
-    //Accessory.call(this, this.name, id);
-    if (accessory !== undefined)
-        this.accessory = accessory;
-    else
-        this.accessory = new Accessory(this.name, id);
-    this.accessory.name = this.name;
-    this.accessory.getServices = function() { return this.services };
+    Accessory.call(this, this.name, id);
+    this.getServices = function() { return this.services };
     var that = this;
 
     //Removing excluded capabilities from config
@@ -57,17 +52,17 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             delete device.attributes[excludedAttribute];
         }
     }
-    that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Identify, (that.device.attributes.hasOwnProperty('switch')));
-    that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Name, that.name);
-    if (device.firmwareVersion) that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.FirmwareRevision, device.firmwareVersion);
-    if (device.manufacturerName) that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Manufacturer, device.manufacturerName);
-    if (device.modelName) that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Model, `${toTitleCase(device.modelName)}`);
-    if (device.serialNumber) that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.SerialNumber, device.serialNumber);    
+    that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Identify, (that.device.attributes.hasOwnProperty('switch')));
+    that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Name, that.name);
+    if (device.firmwareVersion) that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.FirmwareRevision, device.firmwareVersion);
+    if (device.manufacturerName) that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Manufacturer, device.manufacturerName);
+    if (device.modelName) that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Model, `${toTitleCase(device.modelName)}`);
+    if (device.serialNumber) that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.SerialNumber, device.serialNumber);    
 
     that.getaddService = function(Service) {
-        var myService = that.accessory.getService(Service);
+        var myService = that.getService(Service);
         if (!myService) {
-            myService = that.accessory.addService(Service);
+            myService = that.addService(Service);
         }
         return myService;
     };
@@ -734,17 +729,17 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     if (device.attributes.hasOwnProperty('speed') && device.commands.hasOwnProperty('setSpeed'))
     {
         that.deviceGroup = "fan";
-        let fanLvl = fanSpeedConversion(that.device.attributes.speed, false);
-        platform.log("Fan with " + that.device.attributes.speed + ' value: ' + fanLvl);
+        let fanLvl = speedFanConversion(that.device.attributes.speed, false);
+        //platform.log("Fan with " + that.device.attributes.speed + ' value: ' + fanLvl);
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.RotationSpeed)
             .on('get', function(callback) {
-                callback(null, fanLvl);
+                callback(null, speedFanConversion(that.device.attributes.speed, false));
             })
             .on('set', function(value, callback) {
             if (value > 0) {
                 let cmdStr = 'setSpeed';
                 let cmdVal = fanSpeedConversion(value, false);
-                platform.log("Fan Command (Str: " + cmdStr + ') | value: (' + cmdVal + ')');
+                //platform.log("Fan Command (Str: " + cmdStr + ') | value: (' + cmdVal + ')');
                 platform.api.runCommand(callback, device.deviceid, cmdStr, {
                     value1: cmdVal
                 });
@@ -1041,7 +1036,28 @@ function HE_ST_Accessory(platform, group, device, accessory) {
 */
     this.loadData(device, that);
 }
-
+function speedFanConversion(speedVal, has4Spd = false) {
+    if (speedVal === "off")
+        return 0;
+    if (has4Spd) {
+        if (speedVal === "low")
+            return 24;
+        if (speedVal === "med")
+            return 49;
+        if (speedVal === "medhigh")
+            return 74;
+        if (speedVal === "high")
+            return 100;
+    }
+    else {
+        if (speedVal === "low")
+            return 32;
+        if (speedVal === "medium")
+            return 65;
+        if (speedVal === "high")
+            return 100;
+    }
+}
 function fanSpeedConversion(speedVal, has4Spd = false) {
     if (speedVal <= 0) {
         return "off";
@@ -1109,9 +1125,9 @@ function loadData(data, myObject) {
     }
     if (data !== undefined) {
         this.device = data;
-        for (var i = 0; i < that.accessory.services.length; i++) {
-            for (var j = 0; j < that.accessory.services[i].characteristics.length; j++) {
-                that.accessory.services[i].characteristics[j].getValue();
+        for (var i = 0; i < that.services.length; i++) {
+            for (var j = 0; j < that.services[i].characteristics.length; j++) {
+                that.services[i].characteristics[j].getValue();
             }
         }
     } else {
@@ -1121,9 +1137,9 @@ function loadData(data, myObject) {
                 return;
             }
             this.device = data;
-            for (var i = 0; i < that.accessory.services.length; i++) {
-                for (var j = 0; j < that.accessory.services[i].characteristics.length; j++) {
-                    that.accessory.services[i].characteristics[j].getValue();
+            for (var i = 0; i < that.services.length; i++) {
+                for (var j = 0; j < that.services[i].characteristics.length; j++) {
+                    that.services[i].characteristics[j].getValue();
                 }
             }
         });
@@ -1131,5 +1147,5 @@ function loadData(data, myObject) {
 }
 
 function getServices() {
-    return this.accessory.services;
+    return this.services;
 }
