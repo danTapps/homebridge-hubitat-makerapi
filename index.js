@@ -23,22 +23,28 @@ module.exports = function(homebridge) {
 };
 
 function HE_ST_Platform(log, config, api) {
-    this.temperature_unit = 'F';
-
-    this.app_url = config['app_url'];
-    this.app_id = config['app_id'];
-    this.access_token = config['access_token'];
-    this.excludedAttributes = config["excluded_attributes"] || [];
-    this.excludedCapabilities = config["excluded_capabilities"] || [];
-
-    // This is how often it does a full refresh
-    this.polling_seconds = config['polling_seconds'];
-    // Get a full refresh every hour.
-    if (!this.polling_seconds) {
-        this.polling_seconds = 300;
+    if (!config) {
+        log.warn("Ignoring " + platformName + " Platform setup because it is not configured");
+        this.disabled = true;
+        return;
     }
-    this.mode_switches =  config['mode_switches'] || false;
+    this.temperature_unit = 'F';
+    if (config)
+    {
+        this.app_url = config['app_url'];
+        this.app_id = config['app_id'];
+        this.access_token = config['access_token'];
+        this.excludedAttributes = config["excluded_attributes"] || [];
+        this.excludedCapabilities = config["excluded_capabilities"] || [];
 
+        // This is how often it does a full refresh
+        this.polling_seconds = config['polling_seconds'];
+        this.mode_switches =  config['mode_switches'] || false;
+    }
+    if ((this.polling_seconds === undefined) || (this.polling_seconds === ''))
+        this.polling_seconds = 300;
+    if ((this.mode_switches === undefined) || (this.mode_switches === ''))
+        this.mode_switches = false;
     // This is how often it polls for subscription data.
     this.config = config;
     this.api = he_st_api;
@@ -53,6 +59,10 @@ function HE_ST_Platform(log, config, api) {
 HE_ST_Platform.prototype = {
     didFinishLaunching: function() {
         var that = this;
+        if ((that.config === null) || (that.config === undefined)) {
+            this.log('Platform unconfigured in config.json. Do nothing');
+            return;
+        }
         this.log('Fetching ' + platformName + ' devices. This can take a while depending on the number of devices configured in MakerAPI!');
         var that = this;
         he_st_api.init(this.app_url, this.app_id, this.access_token, this.local_hub_ip, this.local_commands);
