@@ -735,7 +735,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     {
         that.deviceGroup = "fan";
         let fanLvl = fanSpeedConversion(that.device.attributes.speed, false);
-        platform.log("Fan with (" + that.device.attributes.speed + ' value: ' + fanLvl);
+        platform.log("Fan with " + that.device.attributes.speed + ' value: ' + fanLvl);
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.RotationSpeed)
             .on('get', function(callback) {
                 callback(null, fanLvl);
@@ -1065,6 +1065,7 @@ function fanSpeedConversion(speedVal, has4Spd = false) {
             return "high";
         }
     }
+    return speedVal;
 }
 
 function convertAlarmState(value, valInt = false) {
