@@ -118,7 +118,7 @@ Let's take a window shade as an example. A window shade might have the attribute
 This might not be the desired behavior and you might want to only have one Homekit devices that sets the position of the shade. The plugin allows you to filter out the "switch" attribute and won't create a Homekit device for that attribute.
 To do so, you would add the following configuration to your config.json:
 
-<div style=" overflow:auto;width:auto;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #f8f8f2">{</span>
+<div style=" overflow:auto;width:auto;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #f8f8f2"></span>
    <span style="color: #f92672">&quot;excluded_attributes&quot;</span><span style="color: #f8f8f2">: {</span>
    <span style="color: lightblue">    &quot;HUBITAT-DEVICE-ID&quot;</span><span style="color: #f8f8f2">: [</span>
    <span style="color: orange">       &quot;switch&quot;</span><span style="color: #f8f8f2"></span>
