@@ -12,10 +12,9 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 #### Hubitat App:
 
-***v0.1.0*** - Ported app over from my tonesto7 version and added Websocket channel. Reworked Device Classification, HSM and modes currently not supported!!!
-***v0.1.2*** - Fixed bug of not updating tiles in HomeKit after an hour expired
+***v0.1.0*** - Ported app over from my tonesto7 version and added Websocket channel. Reworked Device Classification, HSM and modes currently not supported!!!<br>
+***v0.1.2*** - Fixed bug of not updating tiles in HomeKit after an hour expired<br>
 ***v0.2.0*** - Ability to configure attributes to be ingored, added refresh functionallity that removes the need of restarting homebridge after a device selection was changed in MakerAPI, Added Valve devices
-
 <br>
 
 # Explanation:
