@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.2.0```**
+**```Current App version: 0.1.2```**
 
 <br>
 
@@ -14,7 +14,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 ***v0.1.0*** - Ported app over from my tonesto7 version and added Websocket channel. Reworked Device Classification, HSM and modes currently not supported!!!<br>
 ***v0.1.2*** - Fixed bug of not updating tiles in HomeKit after an hour expired<br>
-***v0.2.0*** - Ability to configure attributes to be ingored, added refresh functionallity that removes the need of restarting homebridge after a device selection was changed in MakerAPI, Added Valve devices
+***SOON TO COME v0.2.0*** - Ability to configure attributes to be ingored, added refresh functionallity that removes the need of restarting homebridge after a device selection was changed in MakerAPI, Added Valve devices
 <br>
 
 # Explanation:
