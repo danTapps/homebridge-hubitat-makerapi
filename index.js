@@ -1,21 +1,23 @@
 const pluginName = 'homebridge-hubitat-makerapi';
 const platformName = 'Hubitat-MakerAPI';
 var he_st_api = require('./lib/he_maker_api').api;
+
 var ignoreTheseAttributes = require('./lib/he_maker_api.js').ignoreTheseAttributes;
 var Service,
     Characteristic,
     Accessory,
     uuid,
     HE_ST_Accessory,
+    User,
     PlatformAccessory;
 const util = require('util');
 const uuidGen = require('./accessories/he_st_accessories').uuidGen;
-
+const uuidDecrypt = require('./accessories/he_st_accessories').uuidDecrypt;
 module.exports = function(homebridge) {
-    console.log("Homebridge Version: " + homebridge.version);
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
     Accessory = homebridge.hap.Accessory;
+    User = homebridge.user;
     uuid = homebridge.hap.uuid;
     PlatformAccessory = homebridge.platformAccessory;
     HE_ST_Accessory = require('./accessories/he_st_accessories')(Accessory, Service, Characteristic, PlatformAccessory, uuid, platformName);
@@ -23,28 +25,22 @@ module.exports = function(homebridge) {
 };
 
 function HE_ST_Platform(log, config, api) {
-    if (!config) {
-        log.warn("Ignoring " + platformName + " Platform setup because it is not configured");
-        this.disabled = true;
-        return;
-    }
     this.temperature_unit = 'F';
-    if (config)
-    {
-        this.app_url = config['app_url'];
-        this.app_id = config['app_id'];
-        this.access_token = config['access_token'];
-        this.excludedAttributes = config["excluded_attributes"] || [];
-        this.excludedCapabilities = config["excluded_capabilities"] || [];
 
-        // This is how often it does a full refresh
-        this.polling_seconds = config['polling_seconds'];
-        this.mode_switches =  config['mode_switches'] || false;
-    }
-    if ((this.polling_seconds === undefined) || (this.polling_seconds === ''))
+    this.app_url = config['app_url'];
+    this.app_id = config['app_id'];
+    this.access_token = config['access_token'];
+    this.excludedAttributes = config["excluded_attributes"] || [];
+    this.excludedCapabilities = config["excluded_capabilities"] || [];
+
+    // This is how often it does a full refresh
+    this.polling_seconds = config['polling_seconds'];
+    // Get a full refresh every hour.
+    if (!this.polling_seconds) {
         this.polling_seconds = 300;
-    if ((this.mode_switches === undefined) || (this.mode_switches === ''))
-        this.mode_switches = false;
+    }
+    this.mode_switches =  config['mode_switches'] || false;
+
     // This is how often it polls for subscription data.
     this.config = config;
     this.api = he_st_api;
@@ -53,19 +49,28 @@ function HE_ST_Platform(log, config, api) {
     this.firstpoll = true;
     this.attributeLookup = {};
     this.hb_api = api;
+    he_st_api.init(this.app_url, this.app_id, this.access_token, this.local_hub_ip, this.local_commands);
     this.hb_api.on('didFinishLaunching', this.didFinishLaunching.bind(this));
+    this.asyncCallWait = 0;
 }
 
+function syncGetDeviceInfo(deviceid) {
+    return new Promise(function(resolve, reject) {
+        he_st_api.getDeviceInfo(deviceid, function(device) {
+            resolve(device);
+        });
+    });
+}
 HE_ST_Platform.prototype = {
     didFinishLaunching: function() {
         var that = this;
-        if ((that.config === null) || (that.config === undefined)) {
-            this.log('Platform unconfigured in config.json. Do nothing');
+        if (that.asyncCallWait !== 0) {
+            that.log("Configuration of cached accessories not done, wait for a bit...");
+            setTimeout(that.didFinishLaunching.bind(that), 1000);
             return;
         }
         this.log('Fetching ' + platformName + ' devices. This can take a while depending on the number of devices configured in MakerAPI!');
         var that = this;
-        he_st_api.init(this.app_url, this.app_id, this.access_token, this.local_hub_ip, this.local_commands);
         var starttime = new Date();
         this.reloadData(function(foundAccessories) {
             var timeElapsedinSeconds = Math.round((new Date() - starttime)/1000);
@@ -87,22 +92,36 @@ HE_ST_Platform.prototype = {
         // that.log('config: ', JSON.stringify(this.config));
         var foundAccessories = [];
         that.log('Refreshing All Device Data');
-        he_st_api.getDevicesSummary(function(myList) {
+        he_st_api.getDevicesSummary().then(function(myList) {
             that.log('Received All Device Data ');//, myList);
             // success
             if (myList) {
                 var removeOldDevices = function(devices) {
                     var accessories = [];
                     Object.keys(that.deviceLookup).forEach(function(key) {
+                        if (!(that.deviceLookup[key] instanceof HE_ST_Accessory)) {
+                            that.log("Remove stale cache device " + that.deviceLookup[key].name);
+                            that.hb_api.unregisterPlatformAccessories(pluginName, platformName, [that.deviceLookup[key]]);
+                            delete that.deviceLookup[key];
+                        }
+                    });
+                    Object.keys(that.deviceLookup).forEach(function(key) {
                         var unregister = true;
                         for (var i = 0; i < devices.length; i++) {
                             var uuid;
-                            if (that.deviceLookup[key].UUID === uuidGen(devices[i].id))
+                            //if (that.deviceLookup[key] instanceof HE_ST_Accessory)
+                                uuid = that.deviceLookup[key].accessory.UUID;
+                            //else
+                            //    uuid = that.deviceLookup[key].UUID;
+                            if (uuid === uuidGen(devices[i].id))
                                 unregister = false;
                         }
                         if (unregister)
                         {
-                            accessories.push(that.deviceLookup[key]);
+                            //if (that.deviceLookup[key] instanceof HE_ST_Accessory)
+                                accessories.push(that.deviceLookup[key].accessory);
+                            //else
+                            //    accessories.push(that.deviceLookup[key]);
                         }
                     });
                     if (accessories.length) {
@@ -120,37 +139,74 @@ HE_ST_Platform.prototype = {
                 var populateDevices = function(devices) {
                     for (var i = 0; i < devices.length; i++) {
                         var device = devices[i];
+                        //console.log("DEVICE", device);
                         var accessory;
                         if (that.deviceLookup[uuidGen(device.id)]) {
-                            accessory = that.deviceLookup[uuidGen(device.id)];
-                            //accessory.loadData(devices[i]);
+                            if (that.deviceLookup[uuidGen(device.id)] instanceof HE_ST_Accessory)
+                            {
+                                accessory = that.deviceLookup[uuidGen(device.id)];
+                                that.deviceLookup[uuidGen(device.id)].accessory.updateReachability(true);
+                                //accessory.loadData(devices[i]);
+                            }
                         } else { 
-                            he_st_api.getDeviceInfo(device.id, function(data) {
+                            he_st_api.getDeviceInfo(device.id).then(function(data) {
                                 data.excludedAttributes = that.excludedAttributes[device.id] || ["None"];
                                 accessory = new HE_ST_Accessory(that, "device", data);
                                 // that.log(accessory);
                                 if (accessory !== undefined) {
-                                    if (accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
+                                    if (accessory.accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
                                         if (that.firstpoll) {
                                             that.log('Device Skipped - Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(device));
                                         }
                                     } else {
                                         that.log("Device Added - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
                                         that.deviceLookup[uuidGen(accessory.deviceid)] = accessory;
-                                        that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory]);
-                                        foundAccessories.push(accessory);
+                                        that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory.accessory]);
+                                        foundAccessories.push(accessory.accessory);
+                                        accessory.accessory.updateReachability(true);
+                                        accessory.loadData(data);
                                     }
                                 }
+                            }).catch(function(error){
+                                console.log(error);
+                                if (error.hasOwnProperty('statusCode'))
+                                {
+                                    if (error.statusCode === 404)
+                                    {
+                                        that.log.error('Hubitat tells me that the MakerAPI instance you have configured is not available (code 404).');
+                                    }
+                                    else if (error.statusCode === 401)
+                                    {
+                                        that.log.error('Hubitat tells me that your access code is wrong. Please check and correct it.');
+                                    }
+                                    else if (error.statusCode === 500)
+                                    {
+                                        that.log.error('Looks like your MakerAPI instance is disabled. Got code 500');
+                                    }
+                                    else
+                                    {
+                                        that.log.error('Got an unknown error code, ' + error.statusCode + ' tell dan.t in the hubitat forums and give him the following dump', error);
+                                    }
+                                }
+                                else
+                                {
+                                    that.log.error('Received an error trying to get the device summary information from Hubitat.', error);
+                                }
+                                that.log.error('I am setting this device id ' + device.id + ' as unreachable');
+                                if (that.deviceLookup[uuidGen(device.id)] instanceof HE_ST_Accessory)
+                                    that.deviceLookup[uuidGen(device.id)].accessory.updateReachability(false);
                             });
                         }
                     }   
+                    //that.hb_api.registerPlatformAccessories(pluginName, platformName, foundAccessories);
                 };
                 var updateDevices = function() {
                     if (that.firstpoll)
                         return;
                     var updateAccessories = [];
                     Object.keys(that.deviceLookup).forEach(function(key) {
-                        updateAccessories.push(that.deviceLookup[key]);
+                        if (that.deviceLookup[key] instanceof HE_ST_Accessory)
+                            updateAccessories.push(that.deviceLookup[key].accessory);
                     });
                     if (updateAccessories.length)
                         that.hb_api.updatePlatformAccessories(updateAccessories);
@@ -161,18 +217,6 @@ HE_ST_Platform.prototype = {
                         that.local_hub_ip = myList.location.hubIP;
                         he_st_api.updateGlobals(that.local_hub_ip, that.local_commands);
                     }
-                }
-                var removeCachedDevices = function() {
-                    Object.keys(that.deviceLookup).forEach(function(key) {
-                        if (that.deviceLookup[key] instanceof PlatformAccessory) {
-                            that.hb_api.unregisterPlatformAccessories(pluginName, platformName, [that.deviceLookup[key]]);
-                            delete that.deviceLookup[key];
-                        }
-                    });
-                };
-                if (that.firstpoll) {
-                    that.log("Clearing cached devices");
-                    removeCachedDevices();
                 }
                 removeOldDevices(myList);
                 populateDevices(myList);
@@ -187,10 +231,119 @@ HE_ST_Platform.prototype = {
             if (callback) 
                 callback(foundAccessories);
             that.firstpoll = false;
+        }).catch(function(error) {
+            if (error.hasOwnProperty('statusCode'))
+            {
+                if (error.statusCode === 404)
+                {
+                    that.log.error('Hubitat tells me that the MakerAPI instance you have configured is not available (code 404).');
+                }
+                else if (error.statusCode === 401)
+                {
+                    that.log.error('Hubitat tells me that your access code is wrong. Please check and correct it.');
+                }
+                else if (error.statusCode === 500)
+                {
+                    that.log.error('Looks like your MakerAPI instance is disabled. Got code 500');
+                }
+                else
+                {
+                    that.log.error('Got an unknown error code, ' + error.statusCode + ' tell dan.t in the hubitat forums and give him the following dump', error);
+                }
+            }
+            else
+            {
+                that.log.error('Received an error trying to get the device summary information from Hubitat.', error);
+            }
+            that.log.error('I am stopping my reload here but setting all devices as unreachable');
+            for (var key in that.deviceLookup)
+            {
+                if (that.deviceLookup[key] instanceof HE_ST_Accessory)
+                    that.deviceLookup[key].accessory.updateReachability(false);
+            }
         });
     },
     configureAccessory: function (accessory) {
-        this.deviceLookup[accessory.UUID] = accessory;
+        var that = this;
+        //var wait=require('wait.for');
+
+        
+        //console.log('configure', util.inspect(accessory, false, null, true));
+        for (var index in accessory.services) {
+            var service = accessory.services[index];
+            if (service.UUID !== '0000003E-0000-1000-8000-0026BB765291') {
+                for (var index2 in service.characteristics) {
+                    service.removeCharacteristic(service.characteristics[index2]);
+                }
+                accessory.removeService(service);
+            }
+        }
+        var deviceIdentifier = accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.SerialNumber).value.split(':');
+        if (deviceIdentifier.length > 1) {
+            that.asyncCallWait++;
+            if (deviceIdentifier[0] === 'device') {
+                he_st_api.getDeviceInfo(deviceIdentifier[1]).then(function(device) {
+                    device.excludedAttributes = that.excludedAttributes[device.deviceid] || ["None"];
+                    heAccessory = new HE_ST_Accessory(that, "device", device, accessory);
+                    //console.log('heAccessory', util.inspect(heAccessory, false, null, true));
+                    if (heAccessory !== undefined) {
+                        if (heAccessory.accessory.services.length <= 1 || heAccessory.deviceGroup === 'unknown') {
+                            that.log('Device Skipped - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ', JSON: ' + JSON.stringify(device));
+                            this.deviceLookup[accessory.UUID] = accessory;
+                        } else {
+                            that.log("Device Added Cache - Name " + heAccessory.name + ", ID " + heAccessory.deviceid); //+", JSON: "+ JSON.stringify(device));
+                            that.deviceLookup[accessory.UUID] = heAccessory;
+                            that.deviceLookup[accessory.UUID].accessory.updateReachability(true);
+                        }
+                    }
+                    that.asyncCallWait--;
+                }).catch(function(error) {
+                    //that.log('Received an error response', error);
+                    if (error.hasOwnProperty('statusCode'))
+                    {
+                        if (error.statusCode === 404)
+                        {
+                            that.log('Device Skipped - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - Received Code 404, mark for removal from cache');
+                            that.deviceLookup[accessory.UUID] = accessory;
+                        }
+                        else if (error.statusCode === 401)
+                        {
+                            that.log.error('Hubitat tells me that your access code is wrong. Please check and correct it.');
+                            that.log.error('Going to exit here to not destroy your room assignments.');
+                            process.exit(1);
+                        }
+                        else if (error.statusCode === 500)
+                        {
+                            that.log.error('Looks like your MakerAPI instance is disabled. Got code 500');
+                            that.log.error('Going to exit here to not destroy your room assignments.');
+                            process.exit(1);
+                        }
+                        else
+                        {
+                            that.log.error('Got an unknown error code, ' + error.statusCode + ' tell dan.t in the hubitat forums and give him the following dump', error);
+                            that.log.error('Going to exit here to not destroy your room assignments.');
+                            process.exit(1);
+                        }
+                    }
+                    else
+                    {
+                        that.log.error('Received an error trying to get the device information from Hubitat.', error);
+                        that.log.error('Going to exit here to not destroy your room assignments. Make sure that Hubitat is up and running and you can connect to it.');
+                        process.exit(1);
+                    }
+                    process.exit(1);
+                    that.asyncCallWait--;
+                });
+            } else if (deviceIdentifier[0] === 'mode') {
+            } else {
+                this.log("Invalid Device Indentifier Type (" + deviceIdentifier[0] + ") stored in cache, remove device", accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.Name).value);
+                this.deviceLookup[accessory.UUID] = accessory;
+            }
+        }
+        else {
+            this.log("Invalid Device Indentifier stored in cache, remove device" + accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.Name).value);
+            this.deviceLookup[accessory.UUID] = accessory;
+        }
     },
     accessories: function(callback) {
         var that = this;
