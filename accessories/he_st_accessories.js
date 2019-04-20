@@ -47,7 +47,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     var id = uuidGen(this.deviceid);
     //Accessory.call(this, this.name, id);
       
-    if (accessory !== undefined)
+    if ((accessory !== undefined) && (accessory !== null))
         this.accessory = accessory;
     else
         this.accessory = new Accessory(this.name, id);
