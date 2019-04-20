@@ -272,10 +272,12 @@ HE_ST_Platform.prototype = {
         for (var index in accessory.services) {
             var service = accessory.services[index];
             if (service.UUID !== '0000003E-0000-1000-8000-0026BB765291') {
+                //service.removeAllListeners();
                 for (var index2 in service.characteristics) {
-                    service.removeCharacteristic(service.characteristics[index2]);
+                    //service.removeCharacteristic(service.characteristics[index2]);
+                    //service.characteristics[index2].removeAllListeners();
                 }
-                accessory.removeService(service);
+                //accessory.removeService(service);
             }
         }
         var deviceIdentifier = accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.SerialNumber).value.split(':');
@@ -447,8 +449,9 @@ function he_eventsocket_SetupWebSocket(myHe_st_api) {
                         newChange.push( { device: 'alarmSystemStatus_' + jsonData['locationId'], attribute: 'alarmSystemStatus', value: jsonData['value'], date: new Date(), displayName: jsonData['displayName'] });
                         break;
                     case 'mode':
-                        myHe_st_api.deviceLookup.forEach(function (accessory)
+                        for (var k in myHe_st_api.deviceLookup)
                         {
+                            var accessory = myHe_st_api.deviceLookup[k];
                             if (accessory.deviceGroup === "mode")
                             {
                                 if (accessory.name === "Mode - " + jsonData['value'])
@@ -456,7 +459,7 @@ function he_eventsocket_SetupWebSocket(myHe_st_api) {
                                 else
                                     newChange.push( { device: accessory.deviceid, attribute: 'switch', value: 'off', date: new Date(), displayName: accessory.name });
                             }
-                        });
+                        }
                         break;
                 }
             }

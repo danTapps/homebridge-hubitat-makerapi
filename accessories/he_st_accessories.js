@@ -339,13 +339,13 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 }
             });
         platform.addAttributeUsage('switch', device.deviceid, thisCharacteristic);
-        if (device.attributes.hasOwnProperty('power')) {
-            thisCharacteristic = that.getaddService(serviceType).addCharacteristic(CommunityTypes.CurrentConsumption1)
+        /*if (device.attributes.hasOwnProperty('power')) {
+            thisCharacteristic = that.getaddService(serviceType).getCharacteristic(CommunityTypes.CurrentConsumption1)
                 .on('get', function(callback) {
                 callback(null, Math.round(that.device.attributes.power));
             });
             platform.addAttributeUsage('power', device.deviceid, thisCharacteristic);
-        }
+        }*/
     }
     if (device.commands.hasOwnProperty('setLevel') && device.attributes.hasOwnProperty('level'))
     {
