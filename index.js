@@ -23,7 +23,7 @@ module.exports = function(homebridge) {
     HE_ST_Accessory = require('./accessories/he_st_accessories')(Accessory, Service, Characteristic, PlatformAccessory, uuid, platformName);
     homebridge.registerPlatform(pluginName, platformName, HE_ST_Platform, true);
 };
-
+const npm_version = require('./package.json').version;
 function HE_ST_Platform(log, config, api) {
     this.temperature_unit = 'F';
     this.app_url = config['app_url'];
@@ -43,7 +43,10 @@ function HE_ST_Platform(log, config, api) {
     // This is how often it polls for subscription data.
     this.config = config;
     this.api = he_st_api;
-    this.log = log;
+    this.hb_log = log;
+    this.log = log = function(...args) {
+        this.hb_log('hhm:' + npm_version + ' - ', ...args);
+    }; 
     this.deviceLookup = {};
     this.firstpoll = true;
     this.attributeLookup = {};
