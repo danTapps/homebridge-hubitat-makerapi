@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.1.5```**
+**```Current App version: 0.1.7```**
 
 <br>
 
@@ -13,7 +13,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 #### Hubitat App:
 
 ***v0.1.0*** - Ported app over from my tonesto7 version and added Websocket channel. Reworked Device Classification, HSM and modes currently not supported!!!
-***v0.1.5*** - Fixed issuse with Siri
+***v0.1.7*** - Fixed issuse with Siri
 <br>
 
 # Explanation:
