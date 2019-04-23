@@ -154,19 +154,19 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 .on('set', function(value, callback) {
                     switch (value) {
                         case Characteristic.TargetHeatingCoolingState.COOL:
-                            platform.api.runCommand(callback, device.deviceid, 'cool');
+                            platform.api.runCommand(device.deviceid, 'cool').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             that.device.attributes.thermostatMode = 'cool';
                             break;
                         case Characteristic.TargetHeatingCoolingState.HEAT:
-                            platform.api.runCommand(callback, device.deviceid, 'heat');
+                            platform.api.runCommand(device.deviceid, 'heat').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             that.device.attributes.thermostatMode = 'heat';
                             break;
                         case Characteristic.TargetHeatingCoolingState.AUTO:
-                            platform.api.runCommand(callback, device.deviceid, 'auto');
+                            platform.api.runCommand(device.deviceid, 'auto').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             that.device.attributes.thermostatMode = 'auto';
                             break;
                         case Characteristic.TargetHeatingCoolingState.OFF:
-                            platform.api.runCommand(callback, device.deviceid, 'off');
+                            platform.api.runCommand(device.deviceid, 'off').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             that.device.attributes.thermostatMode = 'off';
                             break;
                     }
@@ -227,16 +227,16 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     // Set the appropriate temperature unit based on the mode
                     switch (that.device.attributes.thermostatMode) {
                         case 'cool':
-                            platform.api.runCommand(callback, device.deviceid, 'setCoolingSetpoint', {
+                            platform.api.runCommand(device.deviceid, 'setCoolingSetpoint', {
                                 value1: temp
-                            });
+                            }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             that.device.attributes.coolingSetpoint = temp;
                             break;
                         case 'emergency heat':
                         case 'heat':
-                            platform.api.runCommand(callback, device.deviceid, 'setHeatingSetpoint', {
+                            platform.api.runCommand(device.deviceid, 'setHeatingSetpoint', {
                                 value1: temp
-                            });
+                            }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             that.device.attributes.heatingSetpoint = temp;
                             break;
                         default:
@@ -247,13 +247,13 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             var cur = that.device.attributes.temperature;
                             var isHighTemp = Math.abs(high - cur) < Math.abs(cur - low);
                             if (isHighTemp) {
-                                platform.api.runCommand(callback, device.deviceid, 'setCoolingSetpoint', {
+                                platform.api.runCommand(device.deviceid, 'setCoolingSetpoint', {
                                     value1: temp
-                                });
+                                }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             } else {
-                                platform.api.runCommand(null, device.deviceid, 'setHeatingSetpoint', {
+                                platform.api.runCommand(device.deviceid, 'setHeatingSetpoint', {
                                     value1: temp
-                                });
+                                }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             }
                             break;
                     }
@@ -287,9 +287,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     } else {
                         temp = value * 1.8 + 32;
                     }
-                    platform.api.runCommand(callback, device.deviceid, 'setHeatingSetpoint', {
+                    platform.api.runCommand(device.deviceid, 'setHeatingSetpoint', {
                         value1: temp
-                    });
+                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     that.device.attributes.heatingSetpoint = temp;
                 });
             platform.addAttributeUsage('heatingSetpoint', device.deviceid, thisCharacteristic);
@@ -309,9 +309,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     } else {
                         temp = value * 1.8 + 32;
                     }
-                    platform.api.runCommand(callback, device.deviceid, 'setCoolingSetpoint', {
+                    platform.api.runCommand(device.deviceid, 'setCoolingSetpoint', {
                         value1: temp
-                    });
+                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     that.device.attributes.coolingSetpoint = temp;
                 });
             platform.addAttributeUsage('coolingSetpoint', device.deviceid, thisCharacteristic);
@@ -330,16 +330,15 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             serviceType = Service.Switch;
         }
         thisCharacteristic = that.getaddService(serviceType).getCharacteristic(Characteristic.On);
-        //platform.log('test', thisCharacteristic); 
         thisCharacteristic = that.getaddService(serviceType).getCharacteristic(Characteristic.On)
             .on('get', function(callback) {
                 callback(null, that.device.attributes.switch === 'on');
             })
             .on('set', function(value, callback) {
                 if (value) {
-                    platform.api.runCommand(callback, device.deviceid, 'on');
+                    platform.api.runCommand(device.deviceid, 'on').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                 } else {
-                    platform.api.runCommand(callback, device.deviceid, 'off');
+                    platform.api.runCommand(device.deviceid, 'off').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                 }
             });
         platform.addAttributeUsage('switch', device.deviceid, thisCharacteristic);
@@ -360,9 +359,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                         callback(null, parseInt(that.device.attributes.level));
                     })
                     .on('set', function(value, callback) {
-                        platform.api.runCommand(callback, device.deviceid, 'setLevel', {
+                        platform.api.runCommand(device.deviceid, 'setLevel', {
                             value1: value
-                        });
+                        }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     });
             platform.addAttributeUsage('level', device.deviceid, thisCharacteristic);
             thisCharacteristic = that.getaddService(Service.WindowCovering).getCharacteristic(Characteristic.CurrentPosition)
@@ -380,10 +379,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     callback(null, parseInt(that.device.attributes.level));
                 })
                 .on('set', function(value, callback) {
-                    platform.api.runCommand(callback, device.deviceid, 'setLevel', {
+                    platform.api.runCommand(device.deviceid, 'setLevel', {
                         value1: value//,
                         //value2: 1
-                    });
+                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                 });
             platform.addAttributeUsage('level', device.deviceid, thisCharacteristic);
         }
@@ -396,9 +395,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             callback(null, Math.round(that.device.attributes.hue * 3.6));
                         })
                         .on('set', function(value, callback) {
-                            platform.api.runCommand(callback, device.deviceid, 'setHue', {
+                            platform.api.runCommand(device.deviceid, 'setHue', {
                                 value1: Math.round(value / 3.6)
-                            });
+                            }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         });
         platform.addAttributeUsage('hue', device.deviceid, thisCharacteristic);
     }   
@@ -410,9 +409,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             callback(null, parseInt(that.device.attributes.saturation));
                         })
                         .on('set', function(value, callback) {
-                            platform.api.runCommand(callback, device.deviceid, 'setSaturation', {
+                            platform.api.runCommand(device.deviceid, 'setSaturation', {
                                 value1: value
-                            });
+                            }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         });
         platform.addAttributeUsage('saturation', device.deviceid, thisCharacteristic);
     }
@@ -482,10 +481,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             })
             .on('set', function(value, callback) {
                 if (value === 1 || value === true) {
-                    platform.api.runCommand(callback, device.deviceid, 'lock');
+                    platform.api.runCommand(device.deviceid, 'lock').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     that.device.attributes.lock = 'locked';
                 } else {
-                    platform.api.runCommand(callback, device.deviceid, 'unlock');
+                    platform.api.runCommand(device.deviceid, 'unlock').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     that.device.attributes.lock = 'unlocked';
                 }
             });
@@ -546,10 +545,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             })
             .on('set', function(value, callback) {
                 if (value === Characteristic.TargetDoorState.OPEN || value === 0) {
-                    platform.api.runCommand(callback, device.deviceid, 'open');
+                    platform.api.runCommand(device.deviceid, 'open').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     that.device.attributes.door = 'opening';
                 } else if (value === Characteristic.TargetDoorState.CLOSED || value === 1) {
-                    platform.api.runCommand(callback, device.deviceid, 'close');
+                    platform.api.runCommand(device.deviceid, 'close').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     that.device.attributes.door = 'closing';
                 }
             });
@@ -716,7 +715,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             })
             .on('set', function(value, callback) {
                 // platform.log('setAlarm: ' + value + ' | ' + convertAlarmState2(value));
-                platform.api.runCommand(callback, device.deviceid, convertAlarmState(value));
+                platform.api.runCommand(device.deviceid, convertAlarmState(value)).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                 that.device.attributes.alarmSystemStatus = convertAlarmState(value);
             });
         platform.addAttributeUsage('alarmSystemStatus', device.deviceid, thisCharacteristic);
@@ -735,9 +734,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             })
             .on('set', function(value, callback) {
                 platform.log('setPosition(HE): ' + value);
-                platform.api.runCommand(callback, device.deviceid, 'setPosition', {
+                platform.api.runCommand(device.deviceid, 'setPosition', {
                     value1: value
-                });
+                }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
             });
         platform.addAttributeUsage('position', device.deviceid, thisCharacteristic);
         thisCharacteristic = that.getaddService(Service.WindowCovering).getCharacteristic(Characteristic.CurrentPosition)
@@ -767,9 +766,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 let cmdStr = 'setSpeed';
                 let cmdVal = fanSpeedConversion(value, false);
                 //platform.log("Fan Command (Str: " + cmdStr + ') | value: (' + cmdVal + ')');
-                platform.api.runCommand(callback, device.deviceid, cmdStr, {
+                platform.api.runCommand(device.deviceid, cmdStr, {
                     value1: cmdVal
-                });
+                }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
             }
         });
         platform.addAttributeUsage('speed', device.deviceid, thisCharacteristic);
@@ -801,9 +800,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             .on('set', function(value, callback) {
                 // if (device.attributes.inStandby !== 'true') {
                 if (value) {
-                    platform.api.runCommand(callback, device.deviceid, 'on');
+                    platform.api.runCommand(device.deviceid, 'on').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                 } else {
-                    platform.api.runCommand(callback, device.deviceid, 'off');
+                    platform.api.runCommand(device.deviceid, 'off').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                 }
                 // }
             });
@@ -849,9 +848,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 .on('set', function(value, callback) {
                     // if (device.attributes.inStandby !== 'true') {
                     if (value) {
-                        platform.api.runCommand(callback, device.deviceid, 'on');
+                        platform.api.runCommand(device.deviceid, 'on').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     } else {
-                        platform.api.runCommand(callback, device.deviceid, 'off');
+                        platform.api.runCommand(device.deviceid, 'off').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     }
                     // }
                 });
@@ -867,9 +866,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 })
                 .on('set', function(value, callback) {
                     if (value > 0) {
-                        platform.api.runCommand(callback, device.deviceid, 'setLevel', {
+                        platform.api.runCommand(device.deviceid, 'setLevel', {
                             value1: value
-                        });
+                        }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     }
                 });
             platform.addAttributeUsage('volume', device.deviceid, thisCharacteristic);
@@ -880,9 +879,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 })
                 .on('set', function(value, callback) {
                     if (value) {
-                        platform.api.runCommand(callback, device.deviceid, 'mute');
+                        platform.api.runCommand(device.deviceid, 'mute').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     } else {
-                        platform.api.runCommand(callback, device.deviceid, 'unmute');
+                        platform.api.runCommand(device.deviceid, 'unmute').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     }
                 });
             platform.addAttributeUsage('mute', device.deviceid, thisCharacteristic);
@@ -896,9 +895,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 })
                 .on('set', function(value, callback) {
                     if (value) {
-                        platform.api.runCommand(callback, device.deviceid, 'on');
+                        platform.api.runCommand(device.deviceid, 'on').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     } else {
-                        platform.api.runCommand(callback, device.deviceid, 'off');
+                        platform.api.runCommand(device.deviceid, 'off').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     }
                 });
             platform.addAttributeUsage('switch', device.deviceid, thisCharacteristic);
@@ -915,9 +914,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             let cmdStr = (that.device.attributes.fanSpeed) ? 'fanspeed' : 'setLevel';
                             let cmdVal = (that.device.attributes.fanSpeed) ? fanSpeedConversion(value, (device.command['medHighSpeed'] !== undefined)) : parseInt(value);
                             platform.log("Fan Command (Str: " + cmdStr + ') | value: (' + cmdVal + ')');
-                            platform.api.runCommand(callback, device.deviceid, cmdStr, {
+                            platform.api.runCommand(device.deviceid, cmdStr, {
                                 value1: cmdVal
-                            });
+                            }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         }
                     });
                 platform.addAttributeUsage('level', device.deviceid, thisCharacteristic);
@@ -932,9 +931,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 })
                 .on('set', function(value, callback) {
                     if (value && that.device.attributes.switch === 'off') {
-                        platform.api.runCommand(callback, device.deviceid, 'mode', {
+                        platform.api.runCommand(device.deviceid, 'mode', {
                             value1: that.name.toString()
-                        });
+                        }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     }
                 });
             platform.addAttributeUsage('switch', device.deviceid, thisCharacteristic);
@@ -950,9 +949,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 })
                 .on('set', function(value, callback) {
                     if (value && that.device.attributes.switch === 'off') {
-                        platform.api.runCommand(callback, device.deviceid, 'button');
+                        platform.api.runCommand(device.deviceid, 'button');
                     }
-                });
+                }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
             platform.addAttributeUsage('switch', device.deviceid, thisCharacteristic);
         }
 
@@ -970,9 +969,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     })
                     .on('set', function(value, callback) {
                         if (value) {
-                            platform.api.runCommand(callback, device.deviceid, 'on');
+                            platform.api.runCommand(device.deviceid, 'on').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         } else {
-                            platform.api.runCommand(callback, device.deviceid, 'off');
+                            platform.api.runCommand(device.deviceid, 'off').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         }
                     });
                 platform.addAttributeUsage('switch', device.deviceid, thisCharacteristic);
@@ -984,9 +983,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     })
                     .on('set', function(value, callback) {
                         if (value) {
-                            platform.api.runCommand(callback, device.deviceid, 'on');
+                            platform.api.runCommand(device.deviceid, 'on').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         } else {
-                            platform.api.runCommand(callback, device.deviceid, 'off');
+                            platform.api.runCommand(device.deviceid, 'off').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         }
                     });
                 platform.addAttributeUsage('switch', device.deviceid, thisCharacteristic);
