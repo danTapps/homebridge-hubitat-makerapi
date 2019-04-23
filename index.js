@@ -9,9 +9,12 @@ var Service,
     HE_ST_Accessory,
     PlatformAccessory;
 const util = require('util');
+const npm_version = require('./package.json').version;
+var Logger = require('./lib/Logger.js').Logger;
 
 module.exports = function(homebridge) {
     console.log("Homebridge Version: " + homebridge.version);
+    console.log("Plugin Version: hhm:" + npm_version);
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
     Accessory = homebridge.hap.Accessory;
@@ -40,7 +43,8 @@ function HE_ST_Platform(log, config, api) {
     // This is how often it polls for subscription data.
     this.config = config;
     this.api = he_st_api;
-    this.log = log;
+    this.log = Logger.withPrefix( this.config['name']+ ' hhm:' + npm_version);
+
     this.deviceLookup = {};
     this.firstpoll = true;
     this.attributeLookup = {};
@@ -56,7 +60,7 @@ HE_ST_Platform.prototype = {
         var foundDeviceIds = [];
         that.log('Refreshing All Device Data');
         he_st_api.getDevices(function(myList) {
-            that.log('Received All Device Data ', myList);
+            that.log('Received All Device Data ');
             // success
             if (myList && myList.deviceList && myList.deviceList instanceof Array) {
                 var populateDevices = function(devices) {
