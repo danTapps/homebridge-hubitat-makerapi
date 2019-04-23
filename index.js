@@ -13,6 +13,8 @@ var Service,
 const util = require('util');
 const uuidGen = require('./accessories/he_st_accessories').uuidGen;
 const uuidDecrypt = require('./accessories/he_st_accessories').uuidDecrypt;
+var Logger = require('./lib/Logger.js').Logger;
+
 module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
@@ -25,6 +27,12 @@ module.exports = function(homebridge) {
 };
 const npm_version = require('./package.json').version;
 function HE_ST_Platform(log, config, api) {
+    if ((config === null) || (config === undefined))
+    {
+        this.disabled = true;
+        log('Plugin not configured in config.json, disabled plugin');
+        return null;
+    }
     this.temperature_unit = 'F';
     this.app_url = config['app_url'];
     this.app_id = config['app_id'];
@@ -43,10 +51,7 @@ function HE_ST_Platform(log, config, api) {
     // This is how often it polls for subscription data.
     this.config = config;
     this.api = he_st_api;
-    this.hb_log = log;
-    this.log = log = function(...args) {
-        this.hb_log('hhm:' + npm_version + ' - ', ...args);
-    }; 
+    this.log = Logger.withPrefix( this.config['name']+ ' hhm:' + npm_version);
     this.deviceLookup = {};
     this.firstpoll = true;
     this.attributeLookup = {};
@@ -269,6 +274,8 @@ HE_ST_Platform.prototype = {
         });
     },
     configureAccessory: function (accessory) {
+        if (this.disabled === true)
+            return;
         var that = this;
 
         var deviceIdentifier = accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.SerialNumber).value.split(':');
