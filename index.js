@@ -80,6 +80,7 @@ HE_ST_Platform.prototype = {
                     .then(function(data) {
                         var fromCache = ((inAccessory !== undefined) && (inAccessory !== null))
                         data.excludedAttributes = that.excludedAttributes[deviceid] || ["None"];
+                        data.excludedCapabilities = that.excludedCapabilities[deviceid] || ["None"];
                         accessory = new HE_ST_Accessory(that, group, data, inAccessory);
                         // that.log(accessory);
                         if (accessory !== undefined) {

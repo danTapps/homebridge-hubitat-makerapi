@@ -1,7 +1,8 @@
 var inherits = require('util').inherits;
-var Accessory, Service, Characteristic, uuid, CommunityTypes, platformName;
+var Accessory, Service, Characteristic, uuid, CommunityTypes, platformName, capabilityToAttributeMap;
 const util = require('util');
 const pluginName = 'homebridge-hubitat-makerapi';
+
 /*
  *   HE_ST Accessory
  */
@@ -13,7 +14,7 @@ module.exports = function(oAccessory, oService, oCharacteristic, oPlatformAccess
         Characteristic = oCharacteristic;
         CommunityTypes = require('../lib/communityTypes')(Service, Characteristic);
         uuid = ouuid;
-
+        capabilityToAttributeMap = require('./exclude_capability').capabilityToAttributeMap();
 //        inherits(HE_ST_Accessory, Accessory);
         HE_ST_Accessory.prototype.loadData = loadData;
         HE_ST_Accessory.prototype.getServices = getServices;
@@ -55,12 +56,30 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     this.accessory.getServices = function() { return this.services };
     var that = this;
 
-    //Removing excluded capabilities from config
+    //Removing excluded attributes from config
     for (var i = 0; i < device.excludedAttributes.length; i++) {
         let excludedAttribute = device.excludedAttributes[i];
         if (device.attributes.hasOwnProperty(excludedAttribute)) {
             platform.log("Removing attribute: " + excludedAttribute + " for device: " + device.name);
             delete device.attributes[excludedAttribute];
+        }
+    }
+
+    for (var i = 0; i < device.excludedCapabilities.length; i++) {
+        let excludedCapability = device.excludedCapabilities[i].toLowerCase();
+        if (device.capabilities.hasOwnProperty(excludedCapability)) {
+            Object.keys(capabilityToAttributeMap).forEach(function(key) {
+                if (key === excludedCapability) {
+                    platform.log("Removing capability: " + excludedCapability + " for device: " + device.name); 
+                    for (var k = 0; k < capabilityToAttributeMap[key].length; k++)
+                    {
+                        var excludedAttribute = capabilityToAttributeMap[key][k];
+                        if (device.attributes.hasOwnProperty(excludedAttribute)) {
+                            delete device.attributes[excludedAttribute];
+                        }
+                    }
+                }   
+            });
         }
     }
 
@@ -390,17 +409,24 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         }
         else
         {
-            thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.Brightness)
-                .on('get', function(callback) {
-                    callback(null, parseInt(that.device.attributes.level));
-                })
-                .on('set', function(value, callback) {
-                    platform.api.runCommand(device.deviceid, 'setLevel', {
-                        value1: value//,
-                        //value2: 1
-                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
-                });
-            platform.addAttributeUsage('level', device.deviceid, thisCharacteristic);
+            if ((device.type) && (device.type.toLowerCase().indexOf('fan control') > -1))
+            {
+                //do nothing, we do you later.....
+            }
+            else
+            {
+                thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.Brightness)
+                    .on('get', function(callback) {
+                        callback(null, parseInt(that.device.attributes.level));
+                    })
+                    .on('set', function(value, callback) {
+                        platform.api.runCommand(device.deviceid, 'setLevel', {
+                            value1: value//,
+                            //value2: 1
+                        }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                    });
+                platform.addAttributeUsage('level', device.deviceid, thisCharacteristic);
+            }
         }
     }
     if (device.commands.hasOwnProperty('setHue') && device.attributes.hasOwnProperty('hue'))
