@@ -224,6 +224,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     } else {
                         temp = value * 1.8 + 32;
                     }
+                    temp = Math.round(temp);
                     // Set the appropriate temperature unit based on the mode
                     switch (that.device.attributes.thermostatMode) {
                         case 'cool':
@@ -234,9 +235,16 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             break;
                         case 'emergency heat':
                         case 'heat':
+                            platform.log('set heat');
                             platform.api.runCommand(device.deviceid, 'setHeatingSetpoint', {
                                 value1: temp
-                            }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                            }).then(function(resp) {
+                                if (callback) 
+                                    callback(null, value); 
+                            }).catch(function(err) {
+                                if (callback) 
+                                    callback(err); 
+                            });
                             that.device.attributes.heatingSetpoint = temp;
                             break;
                         default:
@@ -321,8 +329,16 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         var serviceType = null;
         if (device.commands.hasOwnProperty('setLevel') || device.commands.hasOwnProperty('setHue') || device.commands.hasOwnProperty('setSaturation'))
         {
-            that.deviceGroup = "lights";
-            serviceType = Service.Lightbulb;
+            if ((device.type) && (device.type.toLowerCase().indexOf('fan control') > -1))
+            {
+                that.deviceGroup = "fan";
+                serviceType = Service.Fanv2;
+            }
+            else
+            {
+                that.deviceGroup = "lights";
+                serviceType = Service.Lightbulb;
+            }
         }
         else
         {
