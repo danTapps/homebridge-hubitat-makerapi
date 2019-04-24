@@ -30,6 +30,7 @@ function HE_ST_Platform(log, config, api) {
     this.app_url = config['app_url'];
     this.app_id = config['app_id'];
     this.access_token = config['access_token'];
+    this.excludedAttributes = config["excluded_attributes"] || [];
     this.excludedCapabilities = config["excluded_capabilities"] || [];
 
     // This is how often it does a full refresh
@@ -66,6 +67,7 @@ HE_ST_Platform.prototype = {
                 var populateDevices = function(devices) {
                     for (var i = 0; i < devices.length; i++) {
                         var device = devices[i];
+                        device.excludedAttributes = that.excludedAttributes[device.deviceid] || ["None"];
                         device.excludedCapabilities = that.excludedCapabilities[device.deviceid] || ["None"];
                         var accessory;
                         if (that.deviceLookup[device.deviceid] !== undefined) {

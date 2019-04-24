@@ -1,5 +1,5 @@
 var inherits = require('util').inherits;
-var Accessory, Service, Characteristic, uuid, CommunityTypes, platformName;
+var Accessory, Service, Characteristic, uuid, CommunityTypes, platformName, capabilityToAttributeMap;
 const util = require('util');
 /*
  *   HE_ST Accessory
@@ -12,6 +12,7 @@ module.exports = function(oAccessory, oService, oCharacteristic, oPlatformAccess
         Characteristic = oCharacteristic;
         CommunityTypes = require('../lib/communityTypes')(Service, Characteristic);
         uuid = ouuid;
+        capabilityToAttributeMap = require('./exclude_capability').capabilityToAttributeMap();
 
         inherits(HE_ST_Accessory, Accessory);
         HE_ST_Accessory.prototype.loadData = loadData;
@@ -36,6 +37,33 @@ function HE_ST_Accessory(platform, group, device) {
     var id = uuid.generate(idKey);
     Accessory.call(this, this.name, id);
     var that = this;
+
+    //Removing excluded attributes from config
+    for (var i = 0; i < device.excludedAttributes.length; i++) {
+        let excludedAttribute = device.excludedAttributes[i];
+        if (device.attributes.hasOwnProperty(excludedAttribute)) {
+            platform.log("Removing attribute: " + excludedAttribute + " for device: " + device.name);
+            delete device.attributes[excludedAttribute];
+        }
+    }
+
+    for (var i = 0; i < device.excludedCapabilities.length; i++) {
+        let excludedCapability = device.excludedCapabilities[i].toLowerCase();
+        if (device.capabilities.hasOwnProperty(excludedCapability)) {
+            Object.keys(capabilityToAttributeMap).forEach(function(key) {
+                if (key === excludedCapability) {
+                    platform.log("Removing capability: " + excludedCapability + " for device: " + device.name); 
+                    for (var k = 0; k < capabilityToAttributeMap[key].length; k++)
+                    {
+                        var excludedAttribute = capabilityToAttributeMap[key][k];
+                        if (device.attributes.hasOwnProperty(excludedAttribute)) {
+                            delete device.attributes[excludedAttribute];
+                        }
+                    }
+                }   
+            });
+        }
+    }
 
     that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Identify, (that.device.attributes.hasOwnProperty('switch')));
     that.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Name, that.name);
