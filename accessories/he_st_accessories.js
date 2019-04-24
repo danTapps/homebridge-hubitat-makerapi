@@ -184,6 +184,7 @@ function HE_ST_Accessory(platform, group, device) {
                     } else {
                         temp = value * 1.8 + 32;
                     }
+                    temp = Math.round(temp);
                     // Set the appropriate temperature unit based on the mode
                     switch (device.attributes.thermostatMode) {
                         case 'cool':
@@ -281,8 +282,16 @@ function HE_ST_Accessory(platform, group, device) {
         var serviceType = null;
         if (device.commands.hasOwnProperty('setLevel') || device.commands.hasOwnProperty('setHue') || device.commands.hasOwnProperty('setSaturation'))
         {
-            that.deviceGroup = "lights";
-            serviceType = Service.Lightbulb;
+            if ((device.type) && (device.type.toLowerCase().indexOf('fan control') > -1))
+            {
+                that.deviceGroup = "fan";
+                serviceType = Service.Fanv2;
+            }
+            else
+            {
+                that.deviceGroup = "lights";
+                serviceType = Service.Lightbulb;
+            }
         }
         else
         {
@@ -360,17 +369,24 @@ function HE_ST_Accessory(platform, group, device) {
         }
         else
         {
-            thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.Brightness)
-                .on('get', function(callback) {
-                    callback(null, parseInt(device.attributes.level));
-                })
-                .on('set', function(value, callback) {
-                    platform.api.runCommand(device.deviceid, 'setLevel', {
-                        value1: value//,
-                        //value2: 1
-                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
-                });
-            platform.addAttributeUsage('level', device.deviceid, thisCharacteristic);
+            if ((device.type) && (device.type.toLowerCase().indexOf('fan control') > -1))
+            {
+                //do nothing, we do you later.....
+            }
+            else
+            {
+                thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.Brightness)
+                    .on('get', function(callback) {
+                        callback(null, parseInt(device.attributes.level));
+                    })
+                    .on('set', function(value, callback) {
+                        platform.api.runCommand(device.deviceid, 'setLevel', {
+                            value1: value//,
+                            //value2: 1
+                        }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                    });
+                platform.addAttributeUsage('level', device.deviceid, thisCharacteristic);
+            }
         }
     }
     if (device.commands.hasOwnProperty('setHue'))
