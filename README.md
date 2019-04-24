@@ -12,10 +12,10 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 #### Hubitat App:
 
-***v0.1.0*** - Ported app over from my tonesto7 version and added Websocket channel. Reworked Device Classification, HSM and modes currently not supported!!!
-***v0.1.7*** - Fixed issuse with Siri
-***v0.1.8*** - Fixed issue with setting Thermostat temperature, make a device a Fan if it has the attributes switch and level and the device type contains the words "fan control"
-***v0.1.9*** - Added ability to filter out attributes and capabilities
+***v0.1.0*** - Ported app over from my tonesto7 version and added Websocket channel. Reworked Device Classification, HSM and modes currently not supported!!!<br>
+***v0.1.7*** - Fixed issuse with Siri, Show version number in logging output<br>
+***v0.1.8*** - Fixed issue with setting Thermostat temperature, make a device a Fan if it has the attributes switch and level and the device type contains the words "fan control"<br>
+***v0.1.9*** - Added ability to filter out attributes and capabilities<br>
 
 <br>
 
