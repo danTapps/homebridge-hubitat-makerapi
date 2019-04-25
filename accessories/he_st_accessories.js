@@ -334,31 +334,23 @@ function HE_ST_Accessory(platform, group, device) {
             .on('set', function(value, callback) {
                 if (value) {
                     platform.api.runCommand(device.deviceid, 'on').then(function(resp) {
-                        platform.log('received a good response from MakerApi on turning on switch');
                         if (callback) {
-                            platform.log('triggering callback back to homekit');
                             callback(null, value);
                         } 
                     }).catch(function(err) { 
-                        platform.log('!!!!received a bad response from MakerApi on turning on switch', err);
                         if (callback) 
                         {
-                            platform.log('triggering callback back to homekit');
                             callback(err); 
                         }
                     });
                 } else {
                     platform.api.runCommand(device.deviceid, 'off').then(function(resp) {
-                        platform.log('received a good response from MakerApi on turning off switch');
                         if (callback) {
-                            platform.log('triggering callback back to homekit');
                             callback(null, value);
                         }
                     }).catch(function(err) { 
-                        platform.log('!!!!received a bad response from MakerApi on turning on switch', err);
                         if (callback)
                         {
-                            platform.log('triggering callback back to homekit');
                             callback(err);
                         }
                     });
