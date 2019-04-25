@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.1.9```**
+**```Current App version: 0.1.10```**
 
 <br>
 
@@ -16,7 +16,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.1.7*** - Fixed issuse with Siri, Show version number in logging output<br>
 ***v0.1.8*** - Fixed issue with setting Thermostat temperature, make a device a Fan if it has the attributes switch and level and the device type contains the words "fan control"<br>
 ***v0.1.9*** - Added ability to filter out attributes and capabilities<br>
-
+***v0.1.10*** - Fixed Hampton Bay Fan Component<br>
 <br>
 
 # Explanation:
