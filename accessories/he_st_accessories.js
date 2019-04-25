@@ -26,6 +26,10 @@ function toTitleCase(str) {
     return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 }
 
+function deviceHasAttributeCommand(device, attribute, command)
+{
+   return (device.attributes.hasOwnProperty(attribute) && device.commands.hasOwnProperty(command)); 
+}
 function HE_ST_Accessory(platform, group, device) {
 //     console.log("HE_ST_Accessory: ", platform, util.inspect(device, false, null, true));
     this.deviceid = device.deviceid;
@@ -308,9 +312,9 @@ function HE_ST_Accessory(platform, group, device) {
     if (device.attributes.hasOwnProperty('switch') && group !== 'mode')
     {
         var serviceType = null;
-        if (device.commands.hasOwnProperty('setLevel') || device.commands.hasOwnProperty('setHue') || device.commands.hasOwnProperty('setSaturation'))
+        if (deviceHasAttributeCommand(device, 'level', 'setLevel') || deviceHasAttributeCommand(device, 'hue', 'setHue') || deviceHasAttributeCommand(device, 'saturation', 'setSaturation'))
         {
-            if ((device.type) && (device.type.toLowerCase().indexOf('fan control') > -1))
+            if ((device.type) && ((device.type.toLowerCase().indexOf('fan control') > -1) || (device.type.toLowerCase().indexOf('fan component') > -1)))
             {
                 that.deviceGroup = "fan";
                 serviceType = Service.Fanv2;
@@ -365,7 +369,7 @@ function HE_ST_Accessory(platform, group, device) {
             platform.addAttributeUsage('power', device.deviceid, thisCharacteristic);
         }
     }
-    if (device.commands.hasOwnProperty('setLevel'))
+    if (deviceHasAttributeCommand(device, 'level', 'setLevel'))
     {
         if (group === "windowshade")   //TODO!!!!!
         {
@@ -389,7 +393,7 @@ function HE_ST_Accessory(platform, group, device) {
         }
         else
         {
-            if ((device.type) && (device.type.toLowerCase().indexOf('fan control') > -1))
+            if ((device.type) && ((device.type.toLowerCase().indexOf('fan control') > -1) || (device.type.toLowerCase().indexOf('fan component') > -1)))
             {
                 //do nothing, we do you later.....
             }
@@ -409,7 +413,7 @@ function HE_ST_Accessory(platform, group, device) {
             }
         }
     }
-    if (device.commands.hasOwnProperty('setHue'))
+    if (deviceHasAttributeCommand(device, 'hue', 'setHue'))
     {
         that.deviceGroup = "lights";
         thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.Hue)
@@ -423,7 +427,7 @@ function HE_ST_Accessory(platform, group, device) {
                         });
         platform.addAttributeUsage('hue', device.deviceid, thisCharacteristic);
     }   
-    if (device.commands.hasOwnProperty('setSaturation'))
+    if (deviceHasAttributeCommand(device, 'saturation', 'setSaturation'))
     {
         that.deviceGroup = "lights";
         thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.Saturation)
@@ -469,7 +473,7 @@ function HE_ST_Accessory(platform, group, device) {
             platform.addAttributeUsage('tamper', device.deviceid, thisCharacteristic);
         }
     }
-    if (device.attributes.hasOwnProperty('lock')) {
+    if (deviceHasAttributeCommand(device, 'lock', 'lock')) {
         that.deviceGroup = "lock";
         thisCharacteristic = that.getaddService(Service.LockMechanism).getCharacteristic(Characteristic.LockCurrentState)
             .on('get', function(callback) {
@@ -742,7 +746,7 @@ function HE_ST_Accessory(platform, group, device) {
             });
         platform.addAttributeUsage('alarmSystemStatus', device.deviceid, thisCharacteristic);
     }
-    if (device.attributes.hasOwnProperty('position') && device.commands.hasOwnProperty('setPosition')) {
+    if (deviceHasAttributeCommand(device, 'position', 'setPosition')) {
         that.deviceGroup = "windowshade";
         thisCharacteristic = that.getaddService(Service.WindowCovering).getCharacteristic(Characteristic.TargetPosition)
             .on('get', function(callback) {
@@ -774,11 +778,11 @@ function HE_ST_Accessory(platform, group, device) {
         platform.addAttributeUsage('position', device.deviceid, thisCharacteristic);
         thisCharacteristic = that.getaddService(Service.WindowCovering).setCharacteristic(Characteristic.PositionState, Characteristic.PositionState.STOPPED);
     }
-    if (device.attributes.hasOwnProperty('speed') && device.commands.hasOwnProperty('setSpeed'))
+    if (deviceHasAttributeCommand(device, 'speed', 'setSpeed'))
     {
         that.deviceGroup = "fan";
-        let fanLvl = fanSpeedConversion(that.device.attributes.speed, false);
-        platform.log("Fan with (" + that.device.attributes.speed + ' value: ' + fanLvl);
+        let fanLvl = speedFanConversion(that.device.attributes.speed, false);
+        platform.log("Fan with " + that.device.attributes.speed + ' value: ' + fanLvl);
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.RotationSpeed)
             .on('get', function(callback) {
                 callback(null, fanLvl);
@@ -1085,6 +1089,35 @@ function HE_ST_Accessory(platform, group, device) {
     this.loadData(device, that);
 }
 
+function speedFanConversion(speedVal, has4Spd = false) {
+    if (has4Spd) {
+        switch (speedVal) {
+            case "low":
+                return 24;
+            case "med":
+                return 49;
+            case "medhigh":
+                return 74;
+            case "high":
+                return 100;
+            default:
+                return 0;
+        }
+    }
+    else {
+        switch(speedVal) {
+            case "low":
+                return 32;
+            case "medium":
+                return 65;
+            case "high":
+                return 100;
+            default:
+                return 0;
+        }
+    }
+    return speedVal;
+}
 function fanSpeedConversion(speedVal, has4Spd = false) {
     if (speedVal <= 0) {
         return "off";
@@ -1108,6 +1141,7 @@ function fanSpeedConversion(speedVal, has4Spd = false) {
             return "high";
         }
     }
+    return speedVal;
 }
 
 function convertAlarmState(value, valInt = false) {
