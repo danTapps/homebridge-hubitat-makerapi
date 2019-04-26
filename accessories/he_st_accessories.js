@@ -56,6 +56,16 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     this.accessory.getServices = function() { return this.services };
     var that = this;
 
+    function deviceIsFan()
+    {
+        if ((device.type) && ((device.type.toLowerCase().indexOf('fan control') > -1) || (device.type.toLowerCase().indexOf('fan component') > -1)))
+            return true;
+        return false;
+    }
+    function deviceHasAttributeCommand(attribute, command)
+    {
+        return (device.attributes.hasOwnProperty(attribute) && device.commands.hasOwnProperty(command));
+    }
     //Removing excluded attributes from config
     for (var i = 0; i < device.excludedAttributes.length; i++) {
         let excludedAttribute = device.excludedAttributes[i];
@@ -360,9 +370,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     if (device.attributes.hasOwnProperty('switch') && group !== 'mode')
     {
         var serviceType = null;
-        if (device.commands.hasOwnProperty('setLevel') || device.commands.hasOwnProperty('setHue') || device.commands.hasOwnProperty('setSaturation'))
+        if (deviceHasAttributeCommand('level', 'setLevel') || deviceHasAttributeCommand('hue', 'setHue') || deviceHasAttributeCommand('saturation', 'setSaturation'))
         {
-            if ((device.type) && (device.type.toLowerCase().indexOf('fan control') > -1))
+            if (deviceIsFan())
             {
                 that.deviceGroup = "fan";
                 serviceType = Service.Fanv2;
@@ -378,7 +388,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             that.deviceGroup = "switch";
             serviceType = Service.Switch;
         }
-        thisCharacteristic = that.getaddService(serviceType).getCharacteristic(Characteristic.On);
+
         thisCharacteristic = that.getaddService(serviceType).getCharacteristic(Characteristic.On)
             .on('get', function(callback) {
                 callback(null, that.device.attributes.switch === 'on');
@@ -399,7 +409,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             platform.addAttributeUsage('power', device.deviceid, thisCharacteristic);
         }*/
     }
-    if (device.commands.hasOwnProperty('setLevel') && device.attributes.hasOwnProperty('level'))
+    if (deviceHasAttributeCommand('level', 'setLevel'))
     {
         if (group === "windowshade")   //TODO!!!!!
         {
@@ -423,7 +433,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         }
         else
         {
-            if ((device.type) && (device.type.toLowerCase().indexOf('fan control') > -1))
+            if (deviceIsFan())
             {
                 //do nothing, we do you later.....
             }
@@ -443,7 +453,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             }
         }
     }
-    if (device.commands.hasOwnProperty('setHue') && device.attributes.hasOwnProperty('hue'))
+    if (deviceHasAttributeCommand('hue', 'setHue'))
     {
         that.deviceGroup = "lights";
         thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.Hue)
@@ -457,7 +467,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                         });
         platform.addAttributeUsage('hue', device.deviceid, thisCharacteristic);
     }   
-    if (device.commands.hasOwnProperty('setSaturation') && device.attributes.hasOwnProperty('saturation'))
+    if (deviceHasAttributeCommand('saturation', 'setSaturation'))
     {
         that.deviceGroup = "lights";
         thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.Saturation)
@@ -503,7 +513,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             platform.addAttributeUsage('tamper', device.deviceid, thisCharacteristic);
         }
     }
-    if (device.attributes.hasOwnProperty('lock')) {
+    if (deviceHasAttributeCommand('lock', 'lock')) {
         that.deviceGroup = "lock";
         thisCharacteristic = that.getaddService(Service.LockMechanism).getCharacteristic(Characteristic.LockCurrentState)
             .on('get', function(callback) {
@@ -776,7 +786,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             });
         platform.addAttributeUsage('alarmSystemStatus', device.deviceid, thisCharacteristic);
     }
-    if (device.attributes.hasOwnProperty('position') && device.commands.hasOwnProperty('setPosition')) {
+    if (deviceHasAttributeCommand('position', 'setPosition')) {
         that.deviceGroup = "windowshade";
         thisCharacteristic = that.getaddService(Service.WindowCovering).getCharacteristic(Characteristic.TargetPosition)
             .on('get', function(callback) {
@@ -808,10 +818,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         platform.addAttributeUsage('position', device.deviceid, thisCharacteristic);
         thisCharacteristic = that.getaddService(Service.WindowCovering).setCharacteristic(Characteristic.PositionState, Characteristic.PositionState.STOPPED);
     }
-    if (device.attributes.hasOwnProperty('speed') && device.commands.hasOwnProperty('setSpeed'))
+    if (deviceHasAttributeCommand('speed', 'setSpeed'))
     {
         that.deviceGroup = "fan";
-        let fanLvl = fanSpeedConversion(that.device.attributes.speed, false);
+        let fanLvl = speedFanConversion(that.device.attributes.speed, false);
         //platform.log("Fan with " + that.device.attributes.speed + ' value: ' + fanLvl);
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.RotationSpeed)
             .on('get', function(callback) {
@@ -1119,6 +1129,35 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     //this.loadData(device, that);
 }
 
+function speedFanConversion(speedVal, has4Spd = false) {
+    if (has4Spd) {
+        switch (speedVal) {
+            case "low":
+                return 24;
+            case "med":
+                return 49;
+            case "medhigh":
+                return 74;
+            case "high":
+                return 100;
+            default:
+                return 0;
+        }
+    }
+    else {
+        switch(speedVal) {
+            case "low":
+                return 32;
+            case "medium":
+                return 65;
+            case "high":
+                return 100;
+            default:
+                return 0;
+        }
+    }
+    return speedVal;
+}
 function fanSpeedConversion(speedVal, has4Spd = false) {
     if (speedVal <= 0) {
         return "off";

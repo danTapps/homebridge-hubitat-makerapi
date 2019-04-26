@@ -16,6 +16,8 @@ const uuidDecrypt = require('./accessories/he_st_accessories').uuidDecrypt;
 var Logger = require('./lib/Logger.js').Logger;
 
 module.exports = function(homebridge) {
+    console.log("Homebridge Version: " + homebridge.version);
+    console.log("Plugin Version: hhm:" + npm_version);
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
     Accessory = homebridge.hap.Accessory;
@@ -61,12 +63,9 @@ function HE_ST_Platform(log, config, api) {
     this.firstpoll = true;
     this.attributeLookup = {};
     this.hb_api = api;
-    if (this.config['version_check'] && this.config['version_speak_device'])
-    {
-        this.version_speak_device = this.config['version_speak_device'];
-        this.versionCheck = require('./lib/npm_version_check')(pluginName,npm_version,this.log,null);
-        this.doVersionCheck();
-    }
+    this.version_speak_device = this.config['version_speak_device'];
+    this.versionCheck = require('./lib/npm_version_check')(pluginName,npm_version,this.log,null);
+    this.doVersionCheck();
     he_st_api.init(this.app_url, this.app_id, this.access_token, this.local_hub_ip, this.local_commands);
     this.hb_api.on('didFinishLaunching', this.didFinishLaunching.bind(this));
     this.asyncCallWait = 0;

@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.1.2```**
+**```Current App version: 0.2.0```**
 
 <br>
 
@@ -14,7 +14,11 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 ***v0.1.0*** - Ported app over from my tonesto7 version and added Websocket channel. Reworked Device Classification, HSM and modes currently not supported!!!<br>
 ***v0.1.2*** - Fixed bug of not updating tiles in HomeKit after an hour expired<br>
-***SOON TO COME v0.2.0*** - Ability to configure attributes to be ingored, added refresh functionallity that removes the need of restarting homebridge after a device selection was changed in MakerAPI, Added Valve device, added ability to filter by capabilities
+***v0.1.7*** - Fixed issuse with Siri, Show version number in logging output<br>
+***v0.1.8*** - Fixed issue with setting Thermostat temperature, make a device a Fan if it has the attributes switch and level and the device type contains the words "fan control"<br>
+***v0.1.9*** - Added ability to filter out attributes and capabilities<br>
+***v0.1.10*** - Fixed Hampton Bay Fan Component<br>
+***SOON TO COME v0.2.0*** - added refresh functionallity that removes the need of restarting homebridge after a device selection was changed in MakerAPI, Added Valve device, added ability to filter by capabilities, configure homebridge to use Celsius
 <br>
 
 # Explanation:
@@ -65,6 +69,7 @@ When properly setup, you should see something like this in your Homebridge start
    <span style="color: #f92672">&quot;app_url&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;http://192.168.10.169/apps/api/YOUR_APPS_ID/&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;access_token&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;THIS-SHOULD-BE-YOUR-TOKEN&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;polling_seconds&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">60</span><span style="color: #f8f8f2"></span>
+   <span style="color: #f92672">&quot;temperature_unit&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">"F"</span><span style="color: #f8f8f2"></span>
    <span style="color: #f92672">&quot;excluded_capabilities&quot;</span><span style="color: #f8f8f2">: {</span>
    <span style="color: lightblue">    &quot;HUBITAT-DEVICE-ID-1&quot;</span><span style="color: #f8f8f2">: [</span>
    <span style="color: orange">       &quot;Switch&quot;</span><span style="color: #f8f8f2">,</span>
@@ -95,8 +100,9 @@ When properly setup, you should see something like this in your Homebridge start
  * <p><u>excluded_attributes</u>  <small style="color: #f92672; font-weight: 600;"><i>Optional</i></small><br>
    Defaults to None<br>Specify the Hubitat device by ID and the associated attributes you want homebridge-hubitat-makerapi to ignore. This prevents a Hubitat device from creating unwanted or redundant HomeKit accessories</small></p>
 
-
-## Capabiltiy Filtering
+ * <p><u>temperature_unit</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    Default to F<br>Ability to configure between Celsius and Fahrenheit. Possible values: "F" or "C"</small></p>
+## Capability Filtering
 The **homebridge-hubitat-makerapi** creates Homekit devices based on the attributes of devices. See *** Attribute Filtering *** below.
 To allow backwards compatibilty to tonesto7's plugin, the homebridge-hubitat-makerapi plugin still allows filtering by capability. Capabilities are going to be matched to Hubitat's listed capabilities at [Driver Capability List](https://docs.hubitat.com/index.php?title=Driver_Capability_List) and the associated attributes are going to be removed.
 
