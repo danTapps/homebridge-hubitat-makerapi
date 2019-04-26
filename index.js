@@ -61,12 +61,35 @@ function HE_ST_Platform(log, config, api) {
     this.firstpoll = true;
     this.attributeLookup = {};
     this.hb_api = api;
+    if (this.config['version_check'] && this.config['version_speak_device'])
+    {
+        this.version_speak_device = this.config['version_speak_device'];
+        this.versionCheck = require('./lib/npm_version_check')(pluginName,npm_version,this.log,null);
+        this.doVersionCheck();
+    }
     he_st_api.init(this.app_url, this.app_id, this.access_token, this.local_hub_ip, this.local_commands);
     this.hb_api.on('didFinishLaunching', this.didFinishLaunching.bind(this));
     this.asyncCallWait = 0;
 }
 
 HE_ST_Platform.prototype = {
+    doVersionCheck: function (){
+        var that = this;
+        if (that.versionCheck)
+        {
+            that.versionCheck().then(function(resp){
+                if (resp.versionCheckComplete && !resp.versionIsCurrent)
+                {
+                    if (that.version_speak_device != undefined && that.version_speak_device != null)
+                        that.log('send pushover');
+                        that.api.runCommand(that.version_speak_device, 'speak', {
+                                value1: ('a_newer_version_(' + resp.npm_version + ')_of_the_' + pluginName + '_plugin_is_available_on_NPMJS.')
+                            }).then(function(resp) { }).catch(function(err) { });
+                }
+            }).catch(function(resp){
+            });
+        }
+    },
     addUpdateAccessory: function(deviceid, group, inAccessory = null, inDevice = null)
     {
         var that = this;
@@ -164,6 +187,7 @@ HE_ST_Platform.prototype = {
                 that.polling_seconds = 30;
             }
             setInterval(that.reloadData.bind(that), that.polling_seconds * 1000);
+            setInterval(that.doVersionCheck.bind(that), 24 * 60 * 60 * 1000); //60 seconds
             he_eventsocket_SetupWebSocket(that);
         });
     },
@@ -438,8 +462,9 @@ function he_eventsocket_SetupWebSocket(myHe_st_api) {
         var r = /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/;
         var url = 'ws://' + myHe_st_api.app_url.match(r) + '/eventsocket';
         var ws = new WebSocket(url);
-        myHe_st_api.log('connect to ' + url);
+        myHe_st_api.log('attempt connection to ' + url);
         ws.onopen = function() {
+            myHe_st_api.log('connection to ' + url + ' established');
         };
     
         ws.onmessage = function(e) {

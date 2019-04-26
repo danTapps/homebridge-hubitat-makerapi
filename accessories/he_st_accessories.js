@@ -137,7 +137,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             })
             .on('set', function(value, callback) {
                 if (value) {
-                    callback(null, false);
+                    platform.api.rebootHub().then(function(resp){callback(null, false);}).catch(function(err){callback(err);});
                     //platform.api.setMode(callback, device.deviceid, that.name.toString().replace('Mode - ', ''));
                 }
             });
