@@ -33,7 +33,11 @@ function HE_ST_Platform(log, config, api) {
         log('Plugin not configured in config.json, disabled plugin');
         return null;
     }
-    this.temperature_unit = 'F';
+    
+
+    this.temperature_unit = config['temperature_unit'];
+    if (this.temperature_unit === null || this.temperature_unit === undefined || (this.temperature_unit !== 'F' && this.temperature_unit !== 'C'))
+        this.temperature_unit = 'F'; 
     this.app_url = config['app_url'];
     this.app_id = config['app_id'];
     this.access_token = config['access_token'];
@@ -47,6 +51,7 @@ function HE_ST_Platform(log, config, api) {
         this.polling_seconds = 300;
     }
     this.mode_switches =  config['mode_switches'] || false;
+    this.add_reboot_switch = config['add_reboot_switch'] || false;
 
     // This is how often it polls for subscription data.
     this.config = config;
@@ -62,7 +67,7 @@ function HE_ST_Platform(log, config, api) {
 }
 
 HE_ST_Platform.prototype = {
-    addUpdateAccessory: function(deviceid, group, inAccessory = null)
+    addUpdateAccessory: function(deviceid, group, inAccessory = null, inDevice = null)
     {
         var that = this;
         return new Promise(function(resolve, reject) {
@@ -76,44 +81,64 @@ HE_ST_Platform.prototype = {
                     resolve(accessory);
                 }
             } else { 
-                he_st_api.getDeviceInfo(deviceid)
-                    .then(function(data) {
-                        var fromCache = ((inAccessory !== undefined) && (inAccessory !== null))
-                        data.excludedAttributes = that.excludedAttributes[deviceid] || ["None"];
-                        data.excludedCapabilities = that.excludedCapabilities[deviceid] || ["None"];
-                        accessory = new HE_ST_Accessory(that, group, data, inAccessory);
-                        // that.log(accessory);
-                        if (accessory !== undefined) {
-                            if (accessory.accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
-                                if (that.firstpoll) {
-                                    that.log('Device Skipped - Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(device));
+                if ((inDevice === null) || (inDevice === undefined)) {
+                    he_st_api.getDeviceInfo(deviceid)
+                        .then(function(data) {
+                            var fromCache = ((inAccessory !== undefined) && (inAccessory !== null))
+                            data.excludedAttributes = that.excludedAttributes[deviceid] || ["None"];
+                            data.excludedCapabilities = that.excludedCapabilities[deviceid] || ["None"];
+                            accessory = new HE_ST_Accessory(that, group, data, inAccessory);
+                            // that.log(accessory);
+                            if (accessory !== undefined) {
+                                if (accessory.accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
+                                    if (that.firstpoll) {
+                                        that.log('Device Skipped - Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(device));
+                                    }
+                                } else {
+                                    that.log("Device Added" + (fromCache ? ' (Cache)' : '') + " - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
+                                    that.deviceLookup[uuidGen(accessory.deviceid)] = accessory;
+                                    if (inAccessory === null)
+                                        that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory.accessory]);
+                                    accessory.loadData(data);
+                                    resolve(accessory);
                                 }
-                            } else {
-                                that.log("Device Added" + (fromCache ? ' (Cache)' : '') + " - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
-                                that.deviceLookup[uuidGen(accessory.deviceid)] = accessory;
-                                if (inAccessory === null)
-                                    that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory.accessory]);
-                                accessory.loadData(data);
-                                resolve(accessory);
                             }
+                        })
+                        .catch(function(error){
+                            var errorMessage;
+                            var internalError = undefined;
+                            if (error.hasOwnProperty('statusCode'))
+                            {
+                                if (error.statusCode === 404)
+                                    internalError = new InternalError(InternalError.Codes.API_NOT_AVAILABLE, '', error);
+                                else if (error.statusCode === 401)
+                                    internalError = new InternalError(InternalError.Codes.ACCESS_CODE_WRONG, '', error);
+                                else if (error.statusCode === 500)
+                                    internalError = new InternalError(InternalError.Codes.API_DISABLED, '', error);
+                            }
+                            if (internalError === undefined)
+                                internalError = new InternalError(InternalError.Codes.RANDOM, '', error);
+                            reject(internalError);
+                        });
+                }
+                else {
+                    var fromCache = ((inAccessory !== undefined) && (inAccessory !== null))
+                    accessory = new HE_ST_Accessory(that, group, inDevice, inAccessory);   
+                    if (accessory !== undefined) {
+                        if (accessory.accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
+                            if (that.firstpoll) {
+                                that.log('Device Skipped - Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(inDevice));
+                            }
+                        } else {
+                            that.log("Device Added" + (fromCache ? ' (Cache)' : '') + " - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
+                            that.deviceLookup[uuidGen(accessory.deviceid)] = accessory;
+                            if (inAccessory === null)
+                                that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory.accessory]);
+                            accessory.loadData(inDevice);
+                            resolve(accessory);
                         }
-                    })
-                    .catch(function(error){
-                        var errorMessage;
-                        var internalError = undefined;
-                        if (error.hasOwnProperty('statusCode'))
-                        {
-                            if (error.statusCode === 404)
-                                internalError = new InternalError(InternalError.Codes.API_NOT_AVAILABLE, '', error);
-                            else if (error.statusCode === 401)
-                                internalError = new InternalError(InternalError.Codes.ACCESS_CODE_WRONG, '', error);
-                            else if (error.statusCode === 500)
-                                internalError = new InternalError(InternalError.Codes.API_DISABLED, '', error);
-                        }
-                        if (internalError === undefined)
-                            internalError = new InternalError(InternalError.Codes.RANDOM, '', error);
-                        reject(internalError);
-                    });
+                    }
+                }
             }
         });
     },
@@ -173,6 +198,8 @@ HE_ST_Platform.prototype = {
                 that.removeAccessory(that.deviceLookup[key]).catch(function(error) {});
             });
             Object.keys(that.deviceLookup).forEach(function(key) {
+                if (that.deviceLookup[key].deviceGroup === 'reboot')
+                    return;
                 var unregister = true;
                 for (var i = 0; i < devices.length; i++) {
                     if (that.deviceLookup[key].accessory.UUID === uuidGen(devices[i].id))
@@ -236,6 +263,25 @@ HE_ST_Platform.prototype = {
                 }).catch(function(data) {
                     that.log('A weird error occurred....', new InternalError(4, ''));
                 });
+                if (that.add_reboot_switch === true)
+                {
+                    var rebootDevice = {};
+                    rebootDevice.excludedAttributes = ["None"];
+                    rebootDevice.excludedCapabilities = ["None"];
+                    rebootDevice.deviceid = 'reboot';
+                    rebootDevice.name = 'Reboot Hub';
+                    rebootDevice.attributes = {};
+                    rebootDevice.attributes['reboot'] = 'true';
+                    rebootDevice.capabilities = {};
+                    rebootDevice.commands = {};
+                    that.addUpdateAccessory(rebootDevice.deviceid, 'reboot', null, rebootDevice).catch(function(error) {
+                        that.log(error);
+                    });
+                }
+                if (that.mode_switches)
+                {
+                    
+                }
             } else {
                 that.log('Invalid Response from API call');
             }
@@ -283,7 +329,7 @@ HE_ST_Platform.prototype = {
         if (deviceIdentifier.length > 1) {
             that.asyncCallWait++;
             if (deviceIdentifier[0] === 'device') {
-                that.addUpdateAccessory(deviceIdentifier[1], "device", accessory).then(function() {
+                that.addUpdateAccessory(deviceIdentifier[1], deviceIdentifier[0], accessory).then(function() {
                     that.asyncCallWait--;
                 }).catch(function(error) {
                     if (error.errorCode === InternalError.Codes.API_NOT_AVAILABLE)
@@ -300,6 +346,33 @@ HE_ST_Platform.prototype = {
                     that.asyncCallWait--;
                 });
             } else if (deviceIdentifier[0] === 'mode') {
+            } else if (deviceIdentifier[0] === 'reboot') {
+                var rebootDevice = {};
+                rebootDevice.excludedAttributes = ["None"];
+                rebootDevice.excludedCapabilities = ["None"];
+                rebootDevice.deviceid = 'reboot';
+                rebootDevice.name = 'Reboot Hub';
+                rebootDevice.attributes = {};
+                rebootDevice.attributes['reboot'] = 'true';
+                rebootDevice.capabilities = {};
+                rebootDevice.commands = {};
+                that.addUpdateAccessory(deviceIdentifier[1], deviceIdentifier[0], accessory, rebootDevice).then(function() {
+                    that.asyncCallWait--;
+                }).catch(function(error) {
+                    if (error.errorCode === InternalError.Codes.API_NOT_AVAILABLE)
+                    {
+                        that.log('Device Skipped - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - Received Code 404, mark for removal from cache');
+                        that.deviceLookup[accessory.UUID] = accessory;
+                    }
+                    else
+                    {
+                        that.log(error);
+                        that.log.error('Going to exit here to not destroy your room assignments.');
+                        process.exit(1);
+                    }
+                    that.asyncCallWait--;
+                });
+                     
             } else {
                 this.log("Invalid Device Indentifier Type (" + deviceIdentifier[0] + ") stored in cache, remove device", accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.Name).value);
                 this.deviceLookup[accessory.UUID] = accessory;

@@ -129,6 +129,20 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             });
         platform.addAttributeUsage('switch', device.deviceid, thisCharacteristic);
     }
+    if (group === "reboot") {
+        that.deviceGroup = "reboot";
+        thisCharacteristic = that.getaddService(Service.Switch).getCharacteristic(Characteristic.On)
+            .on('get', function(callback) {
+                callback(null, false);
+            })
+            .on('set', function(value, callback) {
+                if (value) {
+                    callback(null, false);
+                    //platform.api.setMode(callback, device.deviceid, that.name.toString().replace('Mode - ', ''));
+                }
+            });
+        platform.addAttributeUsage('reboot', device.deviceid, thisCharacteristic);
+    }
     if (device.attributes.hasOwnProperty('thermostatOperatingState')) {
         that.deviceGroup = "thermostat";
             thisCharacteristic = that.getaddService(Service.Thermostat).getCharacteristic(Characteristic.CurrentHeatingCoolingState)
