@@ -67,29 +67,45 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         return (device.attributes.hasOwnProperty(attribute) && device.commands.hasOwnProperty(command));
     }
     //Removing excluded attributes from config
-    for (var i = 0; i < device.excludedAttributes.length; i++) {
-        let excludedAttribute = device.excludedAttributes[i];
-        if (device.attributes.hasOwnProperty(excludedAttribute)) {
-            platform.log("Removing attribute: " + excludedAttribute + " for device: " + device.name);
-            delete device.attributes[excludedAttribute];
-        }
-    }
-
-    for (var i = 0; i < device.excludedCapabilities.length; i++) {
-        let excludedCapability = device.excludedCapabilities[i].toLowerCase();
-        if (device.capabilities.hasOwnProperty(excludedCapability)) {
-            Object.keys(capabilityToAttributeMap).forEach(function(key) {
-                if (key === excludedCapability) {
-                    platform.log("Removing capability: " + excludedCapability + " for device: " + device.name); 
-                    for (var k = 0; k < capabilityToAttributeMap[key].length; k++)
-                    {
-                        var excludedAttribute = capabilityToAttributeMap[key][k];
-                        if (device.attributes.hasOwnProperty(excludedAttribute)) {
-                            delete device.attributes[excludedAttribute];
-                        }
+    function removeExculdedAttributes() {
+        for (var i = 0; i < device.excludedAttributes.length; i++) {
+            let excludedAttribute = device.excludedAttributes[i];
+            if (device.attributes.hasOwnProperty(excludedAttribute)) {
+                platform.log("Removing attribute: " + excludedAttribute + " for device: " + device.name);
+                var characteristic = platform.attributeLookup[excudedAttribute][device.deviceid];
+                if (characteristic) {
+                    for (var k in this.accessory.service) {
+                        this.accessory.services[k].removeCharacteristic(characteristic);
                     }
-                }   
-            });
+                    delete platform.attributeLookup[excudedAttribute][device.deviceid];
+                }
+                delete device.attributes[excludedAttribute];
+            }
+        }
+    
+        for (var i = 0; i < device.excludedCapabilities.length; i++) {
+            let excludedCapability = device.excludedCapabilities[i].toLowerCase();
+            if (device.capabilities.hasOwnProperty(excludedCapability)) {
+                Object.keys(capabilityToAttributeMap).forEach(function(key) {
+                    if (key === excludedCapability) {
+                        platform.log("Removing capability: " + excludedCapability + " for device: " + device.name); 
+                        for (var k = 0; k < capabilityToAttributeMap[key].length; k++)
+                        {
+                            var excludedAttribute = capabilityToAttributeMap[key][k];
+                            var characteristic = platform.attributeLookup[excudedAttribute][device.deviceid];
+                            if (characteristic) {
+                                for (var k in this.accessory.service) {
+                                    this.accessory.services[k].removeCharacteristic(characteristic);
+                                }
+                                delete platform.attributeLookup[excudedAttribute][device.deviceid];
+                            }
+                            if (device.attributes.hasOwnProperty(excludedAttribute)) {
+                                delete device.attributes[excludedAttribute];
+                            }
+                        }
+                    }   
+                });
+            }
         }
     }
 
@@ -1127,6 +1143,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     }
 */
     //this.loadData(device, that);
+    this.removeExculdedAttributes();
 }
 
 function speedFanConversion(speedVal, has4Spd = false) {
