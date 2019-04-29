@@ -400,13 +400,17 @@ function HE_ST_Accessory(platform, group, device) {
         }
         else
         {
-            if (deviceIsFan())
+            if (deviceIsFan() && !(deviceHasAttributeCommand('speed', 'setSpeed'))
             {
                 //do nothing, we do you later.....
             }
             else
             {
-                thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.Brightness)
+                var serviceType = Service.Lightbulb;
+                if (deviceIsFan())
+                    serviceType = Service.Fanv2;
+
+                thisCharacteristic = that.getaddService(serviceType).getCharacteristic(Characteristic.Brightness)
                     .on('get', function(callback) {
                         callback(null, parseInt(device.attributes.level));
                     })
