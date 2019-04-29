@@ -47,6 +47,8 @@ function HE_ST_Accessory(platform, group, device) {
     }
     function deviceHasAttributeCommand(attribute, command)
     {
+        //console.log('has attribute ' + attribute, device.attributes.hasOwnProperty(attribute));
+        //console.log('has command ' + command, device.commands.hasOwnProperty(command));
         return (device.attributes.hasOwnProperty(attribute) && device.commands.hasOwnProperty(command));
     }
     //Removing excluded attributes from config
@@ -316,8 +318,8 @@ function HE_ST_Accessory(platform, group, device) {
                 });
             platform.addAttributeUsage('coolingSetpoint', device.deviceid, thisCharacteristic);
         }
-    if (device.attributes.hasOwnProperty('switch') && group !== 'mode')
-    {
+    if (device.attributes.hasOwnProperty('switch') && group !== 'mode' && !deviceIsFan())
+    {   
         var serviceType = null;
         if (deviceHasAttributeCommand('level', 'setLevel') || deviceHasAttributeCommand('hue', 'setHue') || deviceHasAttributeCommand('saturation', 'setSaturation'))
         {
@@ -400,7 +402,8 @@ function HE_ST_Accessory(platform, group, device) {
         }
         else
         {
-            if (deviceIsFan() && !(deviceHasAttributeCommand('speed', 'setSpeed')))
+            
+            if ((deviceIsFan() === true) && (deviceHasAttributeCommand('speed', 'setSpeed') === true))
             {
                 //do nothing, we do you later.....
             }
@@ -413,6 +416,7 @@ function HE_ST_Accessory(platform, group, device) {
                     serviceType = Service.Fanv2;
                     characteristicType = Characteristic.RotationSpeed;
                     factor = 2.55;
+                    this.deviceGroup = "fan";
                 }
 
                 thisCharacteristic = that.getaddService(serviceType).getCharacteristic(characteristicType)
@@ -719,7 +723,6 @@ function HE_ST_Accessory(platform, group, device) {
     }
     if (device.attributes.hasOwnProperty('illuminance')) {
         that.deviceGroup = "sensor";
-        // console.log(device);
         thisCharacteristic = that.getaddService(Service.LightSensor).getCharacteristic(Characteristic.CurrentAmbientLightLevel)
             .on('get', function(callback) {
                 callback(null, Math.ceil(device.attributes.illuminance));
