@@ -400,7 +400,7 @@ function HE_ST_Accessory(platform, group, device) {
         }
         else
         {
-            if (deviceIsFan() && !(deviceHasAttributeCommand('speed', 'setSpeed'))
+            if (deviceIsFan() && !(deviceHasAttributeCommand('speed', 'setSpeed')))
             {
                 //do nothing, we do you later.....
             }
