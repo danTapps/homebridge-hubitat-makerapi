@@ -272,17 +272,10 @@ HE_ST_Platform.prototype = {
             that.log('Received All Device Data ');//, myList);
             // success
             if (myList) {
-                if (myList && myList.location) {
-                    that.temperature_unit = myList.location.temperature_scale;
-                    if (myList.location.hubIP) {
-                        that.local_hub_ip = myList.location.hubIP;
-                        he_st_api.updateGlobals(that.local_hub_ip, that.local_commands);
-                    }
-                }
                 that.removeOldDevices(myList).then(function(data) {
-                    that.populateDevices(data);
+                    return that.populateDevices(data);
                 }).then(function(data) {
-                    that.updateDevices();
+                    return that.updateDevices();
                 }).catch(function(data) {
                     that.log('A weird error occurred....', new InternalError(4, ''));
                 });

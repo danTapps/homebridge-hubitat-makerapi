@@ -309,7 +309,6 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             break;
                         case 'emergency heat':
                         case 'heat':
-                            platform.log('set heat');
                             platform.api.runCommand(device.deviceid, 'setHeatingSetpoint', {
                                 value1: temp
                             }).then(function(resp) {
