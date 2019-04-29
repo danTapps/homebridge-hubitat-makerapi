@@ -463,19 +463,28 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         }
         else
         {
-            if (deviceIsFan())
+            if (deviceIsFan() && !(deviceHasAttributeCommand('speed', 'setSpeed')))
             {
                 //do nothing, we do you later.....
             }
             else
             {
-                thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.Brightness)
+                var serviceType = Service.Lightbulb;
+                var characteristicType = Characteristic.Brightness;
+                var factor = 1;
+                if (deviceIsFan()) {
+                    serviceType = Service.Fanv2;
+                    characteristicType = Characteristic.RotationSpeed;
+                    factor = 2.55;
+                }
+
+                thisCharacteristic = that.getaddService(serviceType).getCharacteristic(characteristicType)
                     .on('get', function(callback) {
-                        callback(null, parseInt(that.device.attributes.level));
+                        callback(null, parseInt(Math.round(that.device.attributes.level/factor)));
                     })
                     .on('set', function(value, callback) {
                         platform.api.runCommand(device.deviceid, 'setLevel', {
-                            value1: value//,
+                            value1: Math.round(value*factor)//,
                             //value2: 1
                         }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     });
@@ -1280,3 +1289,4 @@ function loadData(data, myObject) {
 function getServices() {
     return this.accessory.services;
 }
+
