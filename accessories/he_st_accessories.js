@@ -397,7 +397,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 });
             platform.addAttributeUsage('coolingSetpoint', device.deviceid, thisCharacteristic);
         }
-    if (device.attributes.hasOwnProperty('switch') && group !== 'mode')
+    if (device.attributes.hasOwnProperty('switch') && group !== 'mode' && !deviceIsFan())
     {
         var serviceType = null;
         if (deviceHasAttributeCommand('level', 'setLevel') || deviceHasAttributeCommand('hue', 'setHue') || deviceHasAttributeCommand('saturation', 'setSaturation'))
@@ -463,7 +463,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         }
         else
         {
-            if (deviceIsFan() && !(deviceHasAttributeCommand('speed', 'setSpeed')))
+            if ((deviceIsFan() === true) && (deviceHasAttributeCommand('speed', 'setSpeed') === true))
             {
                 //do nothing, we do you later.....
             }
@@ -476,6 +476,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     serviceType = Service.Fanv2;
                     characteristicType = Characteristic.RotationSpeed;
                     factor = 2.55;
+                    this.deviceGroup = "fan";
                 }
 
                 thisCharacteristic = that.getaddService(serviceType).getCharacteristic(characteristicType)
@@ -860,10 +861,31 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     if (deviceHasAttributeCommand('speed', 'setSpeed'))
     {
         that.deviceGroup = "fan";
-        let fanLvl = speedFanConversion(that.device.attributes.speed, false);
-        //platform.log("Fan with " + that.device.attributes.speed + ' value: ' + fanLvl);
+        thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.Active)
+            .on('get', function(callback) {
+                callback(null, fanLvl>0);
+            })
+            .on('set', function(value,callback) {
+                if (value === 0)
+                    platform.api.runCommand(device.deviceid, "setSpeed", {
+                        value1: "off"
+                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                else
+                {
+                    var fanLvl = speedFanConversion(that.device.attributes.speed, false);
+                    var fanValue = that.device.attributes.speed;
+                    if (fanLvl === 0)
+                        fanValue = "high";
+                    platform.api.runCommand(device.deviceid, "setSpeed", {
+                        value1: fanValue
+                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                }
+            });
+        platform.addAttributeUsage('active', device.deviceid, thisCharacteristic);
+
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.RotationSpeed)
             .on('get', function(callback) {
+                var fanLvl = speedFanConversion(that.device.attributes.speed, false);
                 callback(null, fanLvl);
             })
             .on('set', function(value, callback) {
