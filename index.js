@@ -52,6 +52,8 @@ function HE_ST_Platform(log, config, api) {
     if (!this.polling_seconds) {
         this.polling_seconds = 300;
     }
+    this.enable_modes = config['mode_switches'] || false;
+    this.enable_hsm = config['hsm'] || false;
     this.mode_switches =  config['mode_switches'] || false;
     this.add_reboot_switch = config['add_reboot_switch'] || false;
 
@@ -93,6 +95,7 @@ HE_ST_Platform.prototype = {
     {
         var that = this;
         return new Promise(function(resolve, reject) {
+            //that.log.error('addUpdateAccessory', deviceid, group, inAccessory, inDevice);
             var accessory;
             if (that.deviceLookup && that.deviceLookup[uuidGen(deviceid)]) {
                 if (that.deviceLookup[uuidGen(deviceid)] instanceof HE_ST_Accessory)
@@ -167,7 +170,7 @@ HE_ST_Platform.prototype = {
     didFinishLaunching: function() {
         var that = this;
         if (that.asyncCallWait !== 0) {
-            that.log("Configuration of cached accessories not done, wait for a bit...");
+            that.log("Configuration of cached accessories not done, wait for a bit...", that.asyncCallWait);
             setTimeout(that.didFinishLaunching.bind(that), 1000);
             return;
         }
@@ -239,7 +242,13 @@ HE_ST_Platform.prototype = {
         return new Promise(function(resolve, reject) {
             for (var i = 0; i < devices.length; i++) {
                 var device = devices[i];
-                that.addUpdateAccessory(device.id, "device")
+                var group = "device";
+                if (device.type) 
+                    group = device.type;
+                var deviceData = null;
+                if (device.data)
+                    deviceData = device.data;
+                that.addUpdateAccessory(device.id, group, null, deviceData)
                     .catch(function(error)
                     {
                         that.log.error(error);
@@ -269,18 +278,8 @@ HE_ST_Platform.prototype = {
         var foundAccessories = [];
         that.log('Refreshing All Device Data');
         he_st_api.getDevicesSummary().then(function(myList) {
-            that.log('Received All Device Data ');//, myList);
-            // success
-            if (myList) {
-                that.removeOldDevices(myList).then(function(data) {
-                    return that.populateDevices(data);
-                }).then(function(data) {
-                    return that.updateDevices();
-                }).catch(function(data) {
-                    that.log('A weird error occurred....', new InternalError(4, ''));
-                });
-                if (that.add_reboot_switch === true)
-                {
+            that.log('Received All Device Data ');//, util.inspect(myList, false, null, true));
+            if (that.add_reboot_switch === true) {
                     var rebootDevice = {};
                     rebootDevice.excludedAttributes = ["None"];
                     rebootDevice.excludedCapabilities = ["None"];
@@ -290,18 +289,63 @@ HE_ST_Platform.prototype = {
                     rebootDevice.attributes['reboot'] = 'true';
                     rebootDevice.capabilities = {};
                     rebootDevice.commands = {};
-                    that.addUpdateAccessory(rebootDevice.deviceid, 'reboot', null, rebootDevice).catch(function(error) {
-                        that.log(error);
-                    });
-                }
-                if (that.mode_switches)
-                {
-                    
-                }
-            } else {
-                that.log('Invalid Response from API call');
+                    myList.push( {id: 'reboot', name: 'Reboot Hub', label: 'Reboot Hub', type: 'reboot', data: rebootDevice });
             }
-            if (callback) 
+            return myList;
+        }).then(function(myList) {
+            if (that.enable_modes === true) {
+                that.log('Loading Modes');
+                return he_st_api.getModes().then(function(modes) {
+                    that.log('Processing Modes');
+                    for (var key in modes) {
+                        var mode = {};
+                        mode.deviceid = modes[key].name + ' ' + that.config['name'];
+                        mode.label = 'Mode - ' + modes[key].name;
+                        mode.name = mode.label;
+                        mode.attributes = {};
+                        mode.attributes['switch'] = (modes[key].active === true ? "on": "off");
+                        mode.attributes['modeid'] = modes[key].id;
+                        mode.capabilities = {};
+                        mode.commands = {};
+                        mode.excludedAttributes = ["None"];
+                        mode.excludedCapabilities = ["None"];
+                        myList.push( {id: mode.deviceid, name: mode.label, label: mode.label, type: 'mode', data: mode});
+                    }
+                    return myList;
+                });
+            }
+            else
+                return myList;
+        }).then(function(myList) {
+            if (that.enable_hsm === true) {
+                that.log('Loading HSM');
+                return he_st_api.getAlarmState().then(function(alarmState) {
+                    that.log('Processing HSM');
+                    var alarmSystem = {};
+                    alarmSystem.deviceid = 'hsm' + that.config['name'];
+                    alarmSystem.label = 'Alarm System ' + that.config['name'];
+                    alarmSystem.name = alarmSystem.label;
+                    alarmSystem.attributes = {};
+                    alarmSystem.attributes['alarmSystemStatus'] = alarmState.hsm;
+                    alarmSystem.attributes['alarmSystemCurrent'] = alarmState.hsm;
+                    alarmSystem.capabilities = {};
+                    alarmSystem.commands = {};
+                    alarmSystem.excludedAttributes = ["None"];
+                    alarmSystem.excludedCapabilities = ["None"];
+                    myList.push({id: alarmSystem.deviceid, name: alarmSystem.name, label: alarmSystem.label, type: 'alarmSystem', data: alarmSystem});
+                    return myList;
+                });
+            }
+            else
+                return myList;
+        }).then(function(myList) {
+            return that.removeOldDevices(myList);
+        }).then(function(myList) {
+            return that.populateDevices(myList);
+        }).then(function(myList) {
+            return that.updateDevices();
+        }).then(function(myList) {
+            if (callback)
                 callback(foundAccessories);
             that.firstpoll = false;
         }).catch(function(error) {
@@ -362,6 +406,58 @@ HE_ST_Platform.prototype = {
                     that.asyncCallWait--;
                 });
             } else if (deviceIdentifier[0] === 'mode') {
+                if (that.enable_modes === false) {
+                    that.log('Device Mode - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - marked for removal from cache');
+                    that.deviceLookup[accessory.UUID] = accessory;
+                    that.asyncCallWait--;
+                } else {
+                he_st_api.getModes().then(function(modes) {
+                    var mode = {};
+                    for (var key in modes) {
+                        if (modes[key].name === deviceIdentifier[1].replace(' ' + that.config['name'], ''))
+                        {
+                            mode.deviceid = modes[key].name + ' ' + that.config['name'];    
+                            mode.label = 'Mode - ' + modes[key].name;
+                            mode.name = mode.label;
+                            mode.attributes = {};
+                            mode.attributes['switch'] = (modes[key].active === true ? "on": "off");
+                            mode.attributes['modeid'] = modes[key].id;
+                            mode.capabilities = {};
+                            mode.commands = {};
+                            mode.excludedAttributes = ["None"];
+                            mode.excludedCapabilities = ["None"];
+                        }
+                    }
+                    if (mode.deviceid) {
+                        that.addUpdateAccessory(deviceIdentifier[1], deviceIdentifier[0], accessory, mode).then(function() {
+                            that.asyncCallWait--;
+                        }).catch(function(error) {
+                            if (error.errorCode === InternalError.Codes.API_NOT_AVAILABLE)
+                            {
+                                that.log('Device Mode - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - marked for removal from cache');
+                                that.deviceLookup[accessory.UUID] = accessory;
+                            }
+                            else
+                            {
+                                that.log(error);
+                                that.log.error('Going to exit here to not destroy your room assignments.');
+                                process.exit(1);
+                            }
+                            that.asyncCallWait--;
+                        });
+                    }
+                    else {
+                        that.log('Device Mode - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - marked for removal from cache');
+                        that.deviceLookup[accessory.UUID] = accessory;
+                        that.asyncCallWait--;
+                    }
+                }).catch(function(error) {
+                        that.log(error);
+                        that.log.error('Going to exit here to not destroy your room assignments.');
+                        process.exit(1);
+                    that.asyncCallWait--;
+                });
+                }
             } else if (deviceIdentifier[0] === 'reboot') {
                 var rebootDevice = {};
                 rebootDevice.excludedAttributes = ["None"];
@@ -388,16 +484,62 @@ HE_ST_Platform.prototype = {
                     }
                     that.asyncCallWait--;
                 });
+            } else if (deviceIdentifier[0] === 'alarmSystem') {
+                var alarmSystem = {};
+                if (that.enable_hsm === true && ('hsm' + that.config['name'] === deviceIdentifier[1])) {
+                    he_st_api.getAlarmState().then(function(alarmState) {
+                        alarmSystem.deviceid = 'hsm' + that.config['name'];
+                        alarmSystem.label = 'Alarm System ' + that.config['name'];
+                        alarmSystem.name = alarmSystem.label;
+                        alarmSystem.attributes = {};
+                        alarmSystem.attributes['alarmSystemStatus'] = alarmState.hsm;
+                        alarmSystem.attributes['alarmSystemCurrent'] = alarmState.hsm; 
+                        alarmSystem.capabilities = {};
+                        alarmSystem.commands = {};
+                        alarmSystem.excludedAttributes = ["None"];
+                        alarmSystem.excludedCapabilities = ["None"];
+                        that.addUpdateAccessory(deviceIdentifier[1], deviceIdentifier[0], accessory, alarmSystem).then(function() {
+                            that.asyncCallWait--;
+                        }).catch(function(error) {
+                            that.log(error);
+                            that.log.error('Going to exit here to not destroy your room assignments.');
+                            process.exit(1);
+                        });
+                    });
+                }
+                else {
+                    that.log('Device Skipped - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - marked for removal from cache');
+                    that.deviceLookup[accessory.UUID] = accessory;
+                    that.asyncCallWait--;
+                }
                      
             } else {
                 this.log("Invalid Device Indentifier Type (" + deviceIdentifier[0] + ") stored in cache, remove device", accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.Name).value);
                 this.deviceLookup[accessory.UUID] = accessory;
+                that.asyncCallWait--;
             }
         }
         else {
             this.log("Invalid Device Indentifier stored in cache, remove device" + accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.Name).value);
             this.deviceLookup[accessory.UUID] = accessory;
         }
+    },
+    refreshHSM: function() {
+        var that = this;
+        return new Promise(function(resolve, reject) {
+            he_st_api.getAlarmState().then(function(alarmState) {
+                that.processFieldUpdate( {
+                            device: 'hsm' + that.config['name'],
+                            displayName: 'Alarm System ' + that.config['name'],
+                            attribute:  'alarmSystemStatus',
+                            value: alarmState.hsm,
+                            date:  new Date()
+                        }, that);
+                resolve(null);        
+            }).catch(function(error) {
+                resolve(null);
+            });
+        });
     },
     accessories: function(callback) {
         var that = this;
@@ -426,7 +568,22 @@ HE_ST_Platform.prototype = {
             if (that.attributeLookup[key].hasOwnProperty(deviceid))
                 delete that.attributeLookup[key][deviceid];
         });
-    }, 
+    },
+    getAttributeValue: function(attribute, deviceid, that) {
+        if (!(that.attributeLookup[attribute] && that.attributeLookup[attribute][deviceid])) {
+            return null;
+        }
+        var myUsage = that.attributeLookup[attribute][deviceid];
+        if (myUsage instanceof Array) {
+            for (var j = 0; j < myUsage.length; j++) {
+                var accessory = that.deviceLookup[uuidGen(deviceid)];
+                if (accessory) {
+                    //console.log("setting " + accessory.device.attributes[attributeSet.attribute] + " to " + attributeSet.value + " for " + util.inspect(myUsage[j], false, 1, true ));
+                    return accessory.device.attributes[attribute];
+                }
+            }
+        }
+    },
     processFieldUpdate: function(attributeSet, that) {
         // that.log("Processing Update");
         // that.log(attributeSet);
@@ -438,7 +595,7 @@ HE_ST_Platform.prototype = {
             for (var j = 0; j < myUsage.length; j++) {
                 var accessory = that.deviceLookup[uuidGen(attributeSet.device)];
                 if (accessory) {
-//                    console.log("setting " + accessory.device.attributes[attributeSet.attribute] + " to " + attributeSet.value + " for " + util.inspect(myUsage[j], false, 1, true));
+                    //console.log("setting " + accessory.device.attributes[attributeSet.attribute] + " to " + attributeSet.value + " for " + util.inspect(myUsage[j], false, 1, true));
                     accessory.device.attributes[attributeSet.attribute] = attributeSet.value;
                     myUsage[j].getValue();
                 }
@@ -474,20 +631,50 @@ function he_eventsocket_SetupWebSocket(myHe_st_api) {
                 switch (jsonData['name'])
                 {
                     case 'hsmStatus':
-                        newChange.push( { device: 'alarmSystemStatus_' + jsonData['locationId'], attribute: 'alarmSystemStatus', value: jsonData['value'], date: new Date(), displayName: jsonData['displayName'] });
+                        newChange.push( {
+                            device: 'hsm' + myHe_st_api.config['name'],
+                            displayName: 'Alarm System ' + myHe_st_api.config['name'],
+                            attribute:  'alarmSystemStatus',
+                            value: jsonData['value'],
+                            date:  new Date()
+                        });
+                        newChange.push( {
+                            device: 'hsm' + myHe_st_api.config['name'],
+                            displayName: 'Alarm System ' + myHe_st_api.config['name'],
+                            attribute:  'alarmSystemCurrent',
+                            value: jsonData['value'],
+                            date:  new Date()
+                        });
                         break;
                     case 'hsmAlert':
-                        if (jsonData['value'] === 'intrusion')
+                        if (jsonData['value'] === 'cancel')
                         {
-                            newChange.push( { device: 'alarmSystemStatus_' + jsonData['locationId'], attribute: 'alarmSystemStatus', value: 'alarm_active', date: new Date(), displayName: jsonData['displayName'] });
+                            myHe_st_api.log('Received HSM Cancel');
+                            newChange.push( {
+                                device: 'hsm' + myHe_st_api.config['name'],
+                                displayName: 'Alarm System ' + myHe_st_api.config['name'],
+                                device:  'hsm' + myHe_st_api.config['name'],
+                                attribute:  'alarmSystemCurrent',
+                                value: myHe_st_api.getAttributeValue('alarmSystemStatus', 'hsm' + myHe_st_api.config['name'], myHe_st_api),
+                                date:  new Date()
+                            });
+                        }
+                        else
+                        {
+                            myHe_st_api.log('Received HSM Alert');
+                            newChange.push( {
+                                device: 'hsm' + myHe_st_api.config['name'],
+                                displayName: 'Alarm System ' + myHe_st_api.config['name'],
+                                device:  'hsm' + myHe_st_api.config['name'],
+                                attribute:  'alarmSystemCurrent',
+                                value: 'alarm_active',
+                                date:  new Date()
+                            });
                         }
                         break;
-                    case 'alarmSystemStatus':
-                        newChange.push( { device: 'alarmSystemStatus_' + jsonData['locationId'], attribute: 'alarmSystemStatus', value: jsonData['value'], date: new Date(), displayName: jsonData['displayName'] });
-                        break;
                     case 'mode':
-                        myHe_st_api.deviceLookup.forEach(function (accessory)
-                        {
+                        for (var key in myHe_st_api.deviceLookup) {
+                            var accessory = myHe_st_api.deviceLookup[key];
                             if (accessory.deviceGroup === "mode")
                             {
                                 if (accessory.name === "Mode - " + jsonData['value'])
@@ -495,7 +682,7 @@ function he_eventsocket_SetupWebSocket(myHe_st_api) {
                                 else
                                     newChange.push( { device: accessory.deviceid, attribute: 'switch', value: 'off', date: new Date(), displayName: accessory.name });
                             }
-                        });
+                        }
                         break;
                 }
             }

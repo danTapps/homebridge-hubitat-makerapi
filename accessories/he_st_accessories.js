@@ -58,6 +58,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
 
     function deviceIsFan()
     {
+        if (device.attributes && device.attributes.hasOwnProperty('speed'))
+            return true;
+        if (device.commands && device.commands.hasOwnProperty('setSpeed))
+            return true;
         if ((device.type) && ((device.type.toLowerCase().indexOf('fan control') > -1) || (device.type.toLowerCase().indexOf('fan component') > -1)))
             return true;
         return false;
@@ -165,7 +169,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             })
             .on('set', function(value, callback) {
                 if (value && that.device.attributes.switch === 'off') {
-                    platform.api.setMode(callback, device.deviceid, that.name.toString().replace('Mode - ', ''));
+                    platform.api.setMode(that.device.attributes.modeid).then(function(resp){callback(null, false);}).catch(function(err){callback(err);});
                 }
             });
         platform.addAttributeUsage('switch', device.deviceid, thisCharacteristic);
@@ -810,9 +814,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         thisCharacteristic = that.getaddService(Service.SecuritySystem).getCharacteristic(Characteristic.SecuritySystemCurrentState)
             .on('get', function(callback) {
                 // platform.log('alarm1: ' + device.attributes.alarmSystemStatus + ' | ' + convertAlarmState(device.attributes.alarmSystemStatus, true));
-                callback(null, convertAlarmState(that.device.attributes.alarmSystemStatus, true));
+                callback(null, convertAlarmState(that.device.attributes.alarmSystemCurrent, true));
             });
-        platform.addAttributeUsage('alarmSystemStatus', device.deviceid, thisCharacteristic);
+        platform.addAttributeUsage('alarmSystemCurrent', device.deviceid, thisCharacteristic);
 
         thisCharacteristic = that.getaddService(Service.SecuritySystem).getCharacteristic(Characteristic.SecuritySystemTargetState)
             .on('get', function(callback) {
@@ -820,8 +824,11 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 callback(null, convertAlarmState(that.device.attributes.alarmSystemStatus.toLowerCase(), true));
             })
             .on('set', function(value, callback) {
-                // platform.log('setAlarm: ' + value + ' | ' + convertAlarmState2(value));
-                platform.api.runCommand(device.deviceid, convertAlarmState(value)).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                platform.log('setAlarm: ' + value + ' | ' + convertAlarmState(value));
+                platform.api.setAlarmState(convertAlarmState(value)).then(function(resp) {
+                    if (callback) 
+                        callback(null, value); 
+                }).catch(function(err) { if (callback) callback(err); });
                 that.device.attributes.alarmSystemStatus = convertAlarmState(value);
             });
         platform.addAttributeUsage('alarmSystemStatus', device.deviceid, thisCharacteristic);
@@ -863,6 +870,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         that.deviceGroup = "fan";
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.Active)
             .on('get', function(callback) {
+                var fanLvl = speedFanConversion(that.device.attributes.speed, false);
                 callback(null, fanLvl>0);
             })
             .on('set', function(value,callback) {
@@ -881,7 +889,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                 }
             });
-        platform.addAttributeUsage('active', device.deviceid, thisCharacteristic);
+        platform.addAttributeUsage('speed', device.deviceid, thisCharacteristic);
 
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.RotationSpeed)
             .on('get', function(callback) {
@@ -905,21 +913,6 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 
         });
         platform.addAttributeUsage('speed', device.deviceid, thisCharacteristic);
-        thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.Active)
-            .on('get', function(callback) {
-                callback(null, fanLvl>0);
-            })
-            .on('set', function(value,callback) {
-                if (value === 0)
-                    platform.api.runCommand(device.deviceid, "setSpeed", {
-                        value1: "off"
-                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
-                else
-                    platform.api.runCommand(device.deviceid, "setSpeed", {
-                        value1: "high"
-                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
-            });
-        platform.addAttributeUsage('switch', device.deviceid, thisCharacteristic);
     }
     if (device.attributes.hasOwnProperty('valve')) 
     {
@@ -1266,7 +1259,6 @@ function fanSpeedConversion(speedVal, has4Spd = false) {
     }
     return speedVal;
 }
-
 function convertAlarmState(value, valInt = false) {
     switch (value) {
         case 'stay':
@@ -1275,26 +1267,26 @@ function convertAlarmState(value, valInt = false) {
         case 'armhome':
         case 'armedhome':
         case 0:
-            return valInt ? Characteristic.SecuritySystemCurrentState.STAY_ARM : 'stay';
+            return valInt ? Characteristic.SecuritySystemCurrentState.STAY_ARM : 'armHome';
         case 'away':
         case 'armaway':
         case 'armAway':
         case 'armedaway':
         case 'armedAway':
         case 1:
-            return valInt ? Characteristic.SecuritySystemCurrentState.AWAY_ARM : 'away';
+            return valInt ? Characteristic.SecuritySystemCurrentState.AWAY_ARM : 'armAway';
         case 'night':
         case 'armnight':
         case 'armNight':
         case 'armednight':
         case 'armedNight':
         case 2:
-            return valInt ? Characteristic.SecuritySystemCurrentState.NIGHT_ARM : 'night';
+            return valInt ? Characteristic.SecuritySystemCurrentState.NIGHT_ARM : 'armNight';
         case 'off':
         case 'disarm':
         case 'disarmed':
         case 3:
-            return valInt ? Characteristic.SecuritySystemCurrentState.DISARMED : 'off';
+            return valInt ? Characteristic.SecuritySystemCurrentState.DISARMED : 'disarm';
         case 'alarm_active':
         case 4:
             return valInt ? Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED : 'alarm_active';
