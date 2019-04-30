@@ -60,7 +60,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     {
         if (device.attributes && device.attributes.hasOwnProperty('speed'))
             return true;
-        if (device.commands && device.commands.hasOwnProperty('setSpeed))
+        if (device.commands && device.commands.hasOwnProperty('setSpeed'))
+            return true;
+        if (device.capabilities && device.capabilities.hasOwnProperty('FanControl'))
             return true;
         if ((device.type) && ((device.type.toLowerCase().indexOf('fan control') > -1) || (device.type.toLowerCase().indexOf('fan component') > -1)))
             return true;
@@ -1205,15 +1207,17 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     removeExculdedAttributes();
 }
 
-function speedFanConversion(speedVal, has4Spd = false) {
+function speedFanConversion(speedVal, has4Spd = true) {
     if (has4Spd) {
         switch (speedVal) {
             case "low":
-                return 24;
-            case "med":
-                return 49;
-            case "medhigh":
-                return 74;
+                return 20;
+            case "medium-low":
+                return 40;
+            case "medium":
+                return 60;
+            case "medium-high":
+                return 80;
             case "high":
                 return 100;
             default:
@@ -1234,18 +1238,20 @@ function speedFanConversion(speedVal, has4Spd = false) {
     }
     return speedVal;
 }
-function fanSpeedConversion(speedVal, has4Spd = false) {
+function fanSpeedConversion(speedVal, has4Spd = true) {
     if (speedVal <= 0) {
         return "off";
     }
     if (has4Spd) {
-        if (speedVal > 0 && speedVal <= 25) {
+        if (speedVal > 0 && speedVal <= 20) {
             return "low";
-        } else if (speedVal > 25 && speedVal <= 50) {
-            return "med";
-        } else if (speedVal > 50 && speedVal <= 75) {
-            return "medhigh";
-        } else if (speedVal > 75 && speedVal <= 100) {
+        } else if (speedVal > 20 && speedVal <= 40) {
+            return "medium-low";
+        } else if (speedVal > 40 && speedVal <= 60) {
+            return "medium";
+        } else if (speedVal > 60 && speedVal <= 80) {
+            return "medium-high";
+        } else if (speedVal > 80 && speedVal <= 100) {
             return "high";
         }
     } else {
@@ -1253,12 +1259,13 @@ function fanSpeedConversion(speedVal, has4Spd = false) {
             return "low";
         } else if (speedVal > 33 && speedVal <= 66) {
             return "medium";
-        } else if (speedVal > 66 && speedVal <= 100) {
+        } else if (speedVal > 66 && speedVal <= 99) {
             return "high";
         }
     }
     return speedVal;
 }
+
 function convertAlarmState(value, valInt = false) {
     switch (value) {
         case 'stay':
