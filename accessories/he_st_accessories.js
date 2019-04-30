@@ -801,7 +801,7 @@ function HE_ST_Accessory(platform, group, device) {
     {
         that.deviceGroup = "fan";
         let fanLvl = speedFanConversion(that.device.attributes.speed, false);
-        platform.log("Fan with " + that.device.attributes.speed + ' value: ' + fanLvl);
+        //platform.log("Fan with " + that.device.attributes.speed + ' value: ' + fanLvl);
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.RotationSpeed)
             .on('get', function(callback) {
                 callback(null, fanLvl);
@@ -810,13 +810,34 @@ function HE_ST_Accessory(platform, group, device) {
             if (value > 0) {
                 let cmdStr = 'setSpeed';
                 let cmdVal = fanSpeedConversion(value, false);
-                //platform.log("Fan Command (Str: " + cmdStr + ') | value: (' + cmdVal + ')');
+                //platform.log("Fan Command " + value + " (Str: " + cmdStr + ') | value: (' + cmdVal + ')');
                 platform.api.runCommand(device.deviceid, cmdStr, {
                     value1: cmdVal
                 }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
             }
+            else {
+                platform.api.runCommand(device.deviceid, "setSpeed", {
+                    value1: "off"
+                }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+            }
+
         });
         platform.addAttributeUsage('speed', device.deviceid, thisCharacteristic);
+        thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.Active)
+            .on('get', function(callback) {
+                callback(null, fanLvl>0);
+            })
+            .on('set', function(value,callback) {
+                if (value === 0)
+                    platform.api.runCommand(device.deviceid, "setSpeed", {
+                        value1: "off"
+                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                else
+                    platform.api.runCommand(device.deviceid, "setSpeed", {
+                        value1: "high"
+                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+            });
+        platform.addAttributeUsage('switch', device.deviceid, thisCharacteristic);
     }
     if (device.attributes.hasOwnProperty('valve')) 
     {
