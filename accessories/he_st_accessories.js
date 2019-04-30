@@ -867,11 +867,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 callback(null, fanLvl);
             })
             .on('set', function(value, callback) {
-                console.log('on set', value);
             if (value > 0) {
                 let cmdStr = 'setSpeed';
                 let cmdVal = fanSpeedConversion(value, false);
-                platform.log("Fan Command " + value + " (Str: " + cmdStr + ') | value: (' + cmdVal + ')');
+                //platform.log("Fan Command " + value + " (Str: " + cmdStr + ') | value: (' + cmdVal + ')');
                 platform.api.runCommand(device.deviceid, cmdStr, {
                     value1: cmdVal
                 }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
