@@ -800,10 +800,32 @@ function HE_ST_Accessory(platform, group, device) {
     if (deviceHasAttributeCommand('speed', 'setSpeed'))
     {
         that.deviceGroup = "fan";
-        let fanLvl = speedFanConversion(that.device.attributes.speed, false);
-        //platform.log("Fan with " + that.device.attributes.speed + ' value: ' + fanLvl);
+        thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.Active)
+            .on('get', function(callback) {
+                var fanLvl = speedFanConversion(that.device.attributes.speed, false);
+                callback(null, fanLvl>0);
+            })
+            .on('set', function(value,callback) {
+                if (value === 0)
+                    platform.api.runCommand(device.deviceid, "setSpeed", {
+                        value1: "off"
+                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                else
+                {
+                    var fanLvl = speedFanConversion(that.device.attributes.speed, false);
+                    var fanValue = that.device.attributes.speed;
+                    if (fanLvl === 0)
+                        fanValue = "high";
+                    platform.api.runCommand(device.deviceid, "setSpeed", {
+                        value1: fanValue
+                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                }
+            });
+        platform.addAttributeUsage('speed', device.deviceid, thisCharacteristic);
+
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.RotationSpeed)
             .on('get', function(callback) {
+                var fanLvl = speedFanConversion(that.device.attributes.speed, false);
                 callback(null, fanLvl);
             })
             .on('set', function(value, callback) {
@@ -823,21 +845,6 @@ function HE_ST_Accessory(platform, group, device) {
 
         });
         platform.addAttributeUsage('speed', device.deviceid, thisCharacteristic);
-        thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.Active)
-            .on('get', function(callback) {
-                callback(null, fanLvl>0);
-            })
-            .on('set', function(value,callback) {
-                if (value === 0)
-                    platform.api.runCommand(device.deviceid, "setSpeed", {
-                        value1: "off"
-                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
-                else
-                    platform.api.runCommand(device.deviceid, "setSpeed", {
-                        value1: "high"
-                    }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
-            });
-        platform.addAttributeUsage('switch', device.deviceid, thisCharacteristic);
     }
     if (device.attributes.hasOwnProperty('valve')) 
     {
@@ -1129,15 +1136,17 @@ function HE_ST_Accessory(platform, group, device) {
     this.loadData(device, that);
 }
 
-function speedFanConversion(speedVal, has4Spd = false) {
+function speedFanConversion(speedVal, has4Spd = true) {
     if (has4Spd) {
         switch (speedVal) {
             case "low":
-                return 24;
-            case "med":
-                return 49;
-            case "medhigh":
-                return 74;
+                return 20;
+            case "medium-low":
+                return 40;
+            case "medium":
+                return 60;
+            case "medium-high":
+                return 80;
             case "high":
                 return 100;
             default:
@@ -1158,18 +1167,20 @@ function speedFanConversion(speedVal, has4Spd = false) {
     }
     return speedVal;
 }
-function fanSpeedConversion(speedVal, has4Spd = false) {
+function fanSpeedConversion(speedVal, has4Spd = true) {
     if (speedVal <= 0) {
         return "off";
     }
     if (has4Spd) {
-        if (speedVal > 0 && speedVal <= 25) {
+        if (speedVal > 0 && speedVal <= 20) {
             return "low";
-        } else if (speedVal > 25 && speedVal <= 50) {
-            return "med";
-        } else if (speedVal > 50 && speedVal <= 75) {
-            return "medhigh";
-        } else if (speedVal > 75 && speedVal <= 100) {
+        } else if (speedVal > 20 && speedVal <= 40) {
+            return "medium-low";
+        } else if (speedVal > 40 && speedVal <= 60) {
+            return "medium";
+        } else if (speedVal > 60 && speedVal <= 80) {
+            return "medium-high";
+        } else if (speedVal > 80 && speedVal <= 100) {
             return "high";
         }
     } else {
