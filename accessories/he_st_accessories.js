@@ -86,9 +86,18 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                         if (characteristic) {
                             var iid = characteristic.iid;
                             for (var k in that.accessory.services) {
-                                that.accessory.services[k].removeCharacteristic(characteristic);
-                                if (that.accessory.services[k].characteristics.length === 0)
-                                    that.accessory.removeService(that.accessory.services[k]);
+                                for (var l in that.accessory.services[k].optionalCharacteristics) {
+                                    if (that.accessory.services[k].optionalCharacteristics[l].UUID === characteristic.UUID) {
+                                        that.accessory.services[k].removeCharacteristic(characteristic);
+                                    }
+                                }
+
+                                for (var l in that.accessory.services[k].characteristics) {
+                                    if (that.accessory.services[k].characteristics[l].UUID === characteristic.UUID) {
+                                        that.accessory.removeService(that.accessory.services[k]);
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
@@ -114,9 +123,18 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                                     if (characteristic) {
                                         var iid = characteristic.iid;
                                         for (var k in that.accessory.services) {
-                                            that.accessory.services[k].removeCharacteristic(characteristic);
-                                            if (that.accessory.services[k].characteristics.length === 0)
-                                                that.accessory.removeService(that.accessory.services[k]);
+                                            for (var l in that.accessory.services[k].optionalCharacteristics) {
+                                                if (that.accessory.services[k].optionalCharacteristics[l].UUID === characteristic.UUID) {
+                                                    that.accessory.services[k].removeCharacteristic(characteristic);
+                                                }
+                                            }
+                                            
+                                            for (var l in that.accessory.services[k].characteristics) {
+                                                if (that.accessory.services[k].characteristics[l].UUID === characteristic.UUID) {
+                                                    that.accessory.removeService(that.accessory.services[k]);
+                                                    break;
+                                                }
+                                            }
                                         }
                                     }
                                 }
