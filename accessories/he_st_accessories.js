@@ -102,8 +102,8 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             if (that.device.capabilities.hasOwnProperty(excludedCapability)) {
                 Object.keys(capabilityToAttributeMap).forEach(function(key) {
                     if (key === excludedCapability) {
-                        platform.log("Removing capability: " + excludedCapability + " for device: " + device.name); 
-                        for (var k = 0; k < capabilityToAttributeMap[key].length; k++)
+                        platform.log("Removing capability: " + excludedCapability + " for device: " + device.name);
+                        for (var k in capabilityToAttributeMap[key]) 
                         {
                             var excludedAttribute = capabilityToAttributeMap[key][k];
                             if ( that.platform.attributeLookup[excludedAttribute] ) {
