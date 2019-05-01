@@ -41,10 +41,17 @@ function HE_ST_Accessory(platform, group, device) {
 
     function deviceIsFan()
     {
+        if (device.attributes && device.attributes.hasOwnProperty('speed'))
+            return true;
+        if (device.commands && device.commands.hasOwnProperty('setSpeed'))
+            return true;
+        if (device.capabilities && device.capabilities.hasOwnProperty('FanControl'))
+            return true;
         if ((device.type) && ((device.type.toLowerCase().indexOf('fan control') > -1) || (device.type.toLowerCase().indexOf('fan component') > -1)))
             return true;
         return false;
     }
+
     function deviceHasAttributeCommand(attribute, command)
     {
         //console.log('has attribute ' + attribute, device.attributes.hasOwnProperty(attribute));
