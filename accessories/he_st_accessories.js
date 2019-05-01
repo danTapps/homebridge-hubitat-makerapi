@@ -55,53 +55,6 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     this.accessory.name = this.name;
     this.accessory.getServices = function() { return this.accessory.services };
     var that = this;
-    
-
-    function deviceIsFan()
-    {
-        if (device.attributes && device.attributes.hasOwnProperty('speed'))
-            return true;
-        if (device.commands && device.commands.hasOwnProperty('setSpeed'))
-            return true;
-        if (device.capabilities && device.capabilities.hasOwnProperty('FanControl'))
-            return true;
-        if ((device.type) && ((device.type.toLowerCase().indexOf('fan control') > -1) || (device.type.toLowerCase().indexOf('fan component') > -1)))
-            return true;
-        return false;
-    }
-
-    function deviceHasAttributeCommand(attribute, command)
-    {
-        //console.log('has attribute ' + attribute, device.attributes.hasOwnProperty(attribute));
-        //console.log('has command ' + command, device.commands.hasOwnProperty(command));
-        return (device.attributes.hasOwnProperty(attribute) && device.commands.hasOwnProperty(command));
-    }
-    //Removing excluded attributes from config
-    for (var i = 0; i < device.excludedAttributes.length; i++) {
-        let excludedAttribute = device.excludedAttributes[i];
-        if (device.attributes.hasOwnProperty(excludedAttribute)) {
-            platform.log("Removing attribute: " + excludedAttribute + " for device: " + device.name);
-            delete device.attributes[excludedAttribute];
-        }
-    }
-
-    for (var i = 0; i < device.excludedCapabilities.length; i++) {
-        let excludedCapability = device.excludedCapabilities[i].toLowerCase();
-        if (device.capabilities.hasOwnProperty(excludedCapability)) {
-            Object.keys(capabilityToAttributeMap).forEach(function(key) {
-                if (key === excludedCapability) {
-                    platform.log("Removing capability: " + excludedCapability + " for device: " + device.name); 
-                    for (var k = 0; k < capabilityToAttributeMap[key].length; k++)
-                    {
-                        var excludedAttribute = capabilityToAttributeMap[key][k];
-                        if (device.attributes.hasOwnProperty(excludedAttribute)) {
-                            delete device.attributes[excludedAttribute];
-                        }
-                    }
-                }   
-            });
-        }
-    }
 
     function deviceIsFan()
     {
@@ -835,6 +788,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     }
     if (device.attributes.hasOwnProperty('illuminance')) {
         that.deviceGroup = "sensor";
+        // console.log(device);
         thisCharacteristic = that.getaddService(Service.LightSensor).getCharacteristic(Characteristic.CurrentAmbientLightLevel)
             .on('get', function(callback) {
                 callback(null, Math.ceil(that.device.attributes.illuminance));

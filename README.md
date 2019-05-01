@@ -94,6 +94,9 @@ When properly setup, you should see something like this in your Homebridge start
  * <p><u>app_url</u> & <u>access_token</u>  <small style="color: orange; font-weight: 600;"><i>Required</i></small><br>
     This is the base URL and access token for MakerAPI, check step 1 of the installation instructions on how to obtain the value<b> Notice:</b> The app_url in the example above may be different for you.</small></p>
 
+ * <p><u>polling_seconds</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    Configures the how often (in seconds) the plugin should check if devices were removed or added from/to the selection in MakerAPI. Default is every 300 seconds. Almost no need to restart homebridge anymore! Name changes and changing a device driver still requires a restart.</small></p>
+
  * <p><u>excluded_capabilities</u>  <small style="color: #f92672; font-weight: 600;"><i>Optional</i></small><br>
    Defaults to None<br><small style="color: gray;">Specify the Hubitat device by ID and the associated capabilities you want the plugin to ignore<br>This prevents a Hubitat device from creating unwanted or redundant HomeKit accessories</small></p>
 
