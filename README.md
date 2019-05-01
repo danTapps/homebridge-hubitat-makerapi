@@ -68,7 +68,7 @@ When properly setup, you should see something like this in your Homebridge start
    <span style="color: #f92672">&quot;name&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;Hubitat&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;app_url&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;http://192.168.10.169/apps/api/YOUR_APPS_ID/&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;access_token&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;THIS-SHOULD-BE-YOUR-TOKEN&quot;</span><span style="color: #f8f8f2">,</span>
-   <span style="color: #f92672">&quot;polling_seconds&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">60</span><span style="color: #f8f8f2">,</span>
+   <span style="color: #f92672">&quot;polling_seconds&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">300</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;temperature_unit&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">"F"</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;mode_switches&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">true</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;hsm&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">true</span><span style="color: #f8f8f2">,</span>   
@@ -94,7 +94,7 @@ When properly setup, you should see something like this in your Homebridge start
     This is the base URL and access token for MakerAPI, check step 1 of the installation instructions on how to obtain the value<b> Notice:</b> The app_url in the example above may be different for you.</small></p>
 
  * <p><u>polling_seconds</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
-    Configures the how often (in seconds) the plugin should check if devices were removed or added from/to the selection in MakerAPI. Default is every 60 seconds. Almost no need to restart homebridge anymore! Name changes and changing a device driver still requires a restart.</small></p>
+    Configures the how often (in seconds) the plugin should check if devices were removed or added from/to the selection in MakerAPI. Default is every 300 seconds. Almost no need to restart homebridge anymore! Name changes and changing a device driver still requires a restart.</small></p>
 
  * <p><u>excluded_capabilities</u>  <small style="color: #f92672; font-weight: 600;"><i>Optional</i></small><br>
    Defaults to None<br><small style="color: gray;">Specify the Hubitat device by ID and the associated capabilities you want the plugin to ignore<br>This prevents a Hubitat device from creating unwanted or redundant HomeKit accessories</small></p>
