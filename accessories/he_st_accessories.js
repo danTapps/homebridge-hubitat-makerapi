@@ -164,7 +164,6 @@ function HE_ST_Accessory(platform, group, device, accessory) {
 
     if (group === "mode") {
         that.deviceGroup = "mode";
-        platform.log('Mode: (' + that.name + ')');
         thisCharacteristic = that.getaddService(Service.Switch).getCharacteristic(Characteristic.On)
             .on('get', function(callback) {
                 callback(null, that.device.attributes.switch === 'on');

@@ -117,10 +117,10 @@ HE_ST_Platform.prototype = {
                             if (accessory !== undefined) {
                                 if (accessory.accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
                                     if (that.firstpoll) {
-                                        that.log('Device Skipped - Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(device));
+                                        that.log.warn('Device Skipped - Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(device));
                                     }
                                 } else {
-                                    that.log("Device Added" + (fromCache ? ' (Cache)' : '') + " - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
+                                    that.log.good("Device Added" + (fromCache ? ' (Cache)' : '') + " - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
                                     that.deviceLookup[uuidGen(accessory.deviceid)] = accessory;
                                     if (inAccessory === null)
                                         that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory.accessory]);
@@ -152,10 +152,10 @@ HE_ST_Platform.prototype = {
                     if (accessory !== undefined) {
                         if (accessory.accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
                             if (that.firstpoll) {
-                                that.log('Device Skipped - Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(inDevice));
+                                that.log.warn('Device Skipped - Name ' + accessory.name + ', ID ' + accessory.deviceid + ', JSON: ' + JSON.stringify(inDevice));
                             }
                         } else {
-                            that.log("Device Added" + (fromCache ? ' (Cache)' : '') + " - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
+                            that.log.good("Device Added" + (fromCache ? ' (Cache)' : '') + " - Name " + accessory.name + ", ID " + accessory.deviceid); //+", JSON: "+ JSON.stringify(device));
                             that.deviceLookup[uuidGen(accessory.deviceid)] = accessory;
                             if (inAccessory === null)
                                 that.hb_api.registerPlatformAccessories(pluginName, platformName, [accessory.accessory]);
@@ -297,6 +297,11 @@ HE_ST_Platform.prototype = {
                 that.log('Loading Modes');
                 return he_st_api.getModes().then(function(modes) {
                     that.log('Processing Modes');
+                    if (modes === null)
+                    {
+                        that.log.warn('Modes not available, old HE firmware? skipping modes');
+                        return myList;
+                    }
                     for (var key in modes) {
                         var mode = {};
                         mode.deviceid = modes[key].name + ' ' + that.config['name'];
@@ -320,6 +325,11 @@ HE_ST_Platform.prototype = {
             if (that.enable_hsm === true) {
                 that.log('Loading HSM');
                 return he_st_api.getAlarmState().then(function(alarmState) {
+                    if (alarmState.hsm === null)
+                    {
+                            that.log.warn('HSM not configured, skipping');
+                            return myList;
+                    }
                     that.log('Processing HSM');
                     var alarmSystem = {};
                     alarmSystem.deviceid = 'hsm' + that.config['name'];
@@ -394,7 +404,7 @@ HE_ST_Platform.prototype = {
                 }).catch(function(error) {
                     if (error.errorCode === InternalError.Codes.API_NOT_AVAILABLE)
                     {
-                        that.log('Device Skipped - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - Received Code 404, mark for removal from cache');
+                        that.log.warn('Device Skipped - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - Received Code 404, mark for removal from cache');
                         that.deviceLookup[accessory.UUID] = accessory;
                     }
                     else
@@ -407,12 +417,19 @@ HE_ST_Platform.prototype = {
                 });
             } else if (deviceIdentifier[0] === 'mode') {
                 if (that.enable_modes === false) {
-                    that.log('Device Mode - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - marked for removal from cache');
+                    that.log.warn('Device Mode - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - marked for removal from cache');
                     that.deviceLookup[accessory.UUID] = accessory;
                     that.asyncCallWait--;
                 } else {
                 he_st_api.getModes().then(function(modes) {
                     var mode = {};
+                    if (modes === null)
+                    {
+                        that.log.warn('Modes not available, old HE firmware? removing mode tiles');
+                        that.deviceLookup[accessory.UUID] = accessory;
+                        that.asyncCallWait--;
+                        return;
+                    }
                     for (var key in modes) {
                         if (modes[key].name === deviceIdentifier[1].replace(' ' + that.config['name'], ''))
                         {
@@ -434,7 +451,7 @@ HE_ST_Platform.prototype = {
                         }).catch(function(error) {
                             if (error.errorCode === InternalError.Codes.API_NOT_AVAILABLE)
                             {
-                                that.log('Device Mode - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - marked for removal from cache');
+                                that.log.warn('Device Mode - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - marked for removal from cache');
                                 that.deviceLookup[accessory.UUID] = accessory;
                             }
                             else
@@ -447,7 +464,7 @@ HE_ST_Platform.prototype = {
                         });
                     }
                     else {
-                        that.log('Device Mode - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - marked for removal from cache');
+                        that.log.warn('Device Mode - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - marked for removal from cache');
                         that.deviceLookup[accessory.UUID] = accessory;
                         that.asyncCallWait--;
                     }
@@ -473,7 +490,7 @@ HE_ST_Platform.prototype = {
                 }).catch(function(error) {
                     if (error.errorCode === InternalError.Codes.API_NOT_AVAILABLE)
                     {
-                        that.log('Device Skipped - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - Received Code 404, mark for removal from cache');
+                        that.log.warn('Device Skipped - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - Received Code 404, mark for removal from cache');
                         that.deviceLookup[accessory.UUID] = accessory;
                     }
                     else
@@ -488,6 +505,13 @@ HE_ST_Platform.prototype = {
                 var alarmSystem = {};
                 if (that.enable_hsm === true && ('hsm' + that.config['name'] === deviceIdentifier[1])) {
                     he_st_api.getAlarmState().then(function(alarmState) {
+                        if (alarmState.hsm === null)
+                        {
+                            that.log.warn('HSM not configured, removing tile');
+                            that.deviceLookup[accessory.UUID] = accessory;
+                            that.asyncCallWait--;
+                            return;
+                        }
                         alarmSystem.deviceid = 'hsm' + that.config['name'];
                         alarmSystem.label = 'Alarm System ' + that.config['name'];
                         alarmSystem.name = alarmSystem.label;
@@ -508,38 +532,21 @@ HE_ST_Platform.prototype = {
                     });
                 }
                 else {
-                    that.log('Device Skipped - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - marked for removal from cache');
+                    that.log.warn('Device Skipped - Name ' + accessory.name + ', ID ' + deviceIdentifier[1] + ' - marked for removal from cache');
                     that.deviceLookup[accessory.UUID] = accessory;
                     that.asyncCallWait--;
                 }
                      
             } else {
-                this.log("Invalid Device Indentifier Type (" + deviceIdentifier[0] + ") stored in cache, remove device", accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.Name).value);
+                this.log.warn("Invalid Device Indentifier Type (" + deviceIdentifier[0] + ") stored in cache, remove device", accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.Name).value);
                 this.deviceLookup[accessory.UUID] = accessory;
                 that.asyncCallWait--;
             }
         }
         else {
-            this.log("Invalid Device Indentifier stored in cache, remove device" + accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.Name).value);
+            this.log.warn("Invalid Device Indentifier stored in cache, remove device" + accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.Name).value);
             this.deviceLookup[accessory.UUID] = accessory;
         }
-    },
-    refreshHSM: function() {
-        var that = this;
-        return new Promise(function(resolve, reject) {
-            he_st_api.getAlarmState().then(function(alarmState) {
-                that.processFieldUpdate( {
-                            device: 'hsm' + that.config['name'],
-                            displayName: 'Alarm System ' + that.config['name'],
-                            attribute:  'alarmSystemStatus',
-                            value: alarmState.hsm,
-                            date:  new Date()
-                        }, that);
-                resolve(null);        
-            }).catch(function(error) {
-                resolve(null);
-            });
-        });
     },
     accessories: function(callback) {
         var that = this;
