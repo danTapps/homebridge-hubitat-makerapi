@@ -55,7 +55,6 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     this.accessory.name = this.name;
     this.accessory.getServices = function() { return this.accessory.services };
     var that = this;
-
     function deviceIsFan()
     {
         if (device.attributes && device.attributes.hasOwnProperty('speed'))
@@ -86,9 +85,18 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                         if (characteristic) {
                             var iid = characteristic.iid;
                             for (var k in that.accessory.services) {
-                                that.accessory.services[k].removeCharacteristic(characteristic);
-                                if (that.accessory.services[k].characteristics.length === 0)
-                                    that.accessory.removeService(that.accessory.services[k]);
+                                for (var l in that.accessory.services[k].optionalCharacteristics) {
+                                    if (that.accessory.services[k].optionalCharacteristics[l].UUID === characteristic.UUID) {
+                                        that.accessory.services[k].removeCharacteristic(characteristic);
+                                    }
+                                }
+
+                                for (var l in that.accessory.services[k].characteristics) {
+                                    if (that.accessory.services[k].characteristics[l].UUID === characteristic.UUID) {
+                                        that.accessory.removeService(that.accessory.services[k]);
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
@@ -103,9 +111,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 Object.keys(capabilityToAttributeMap).forEach(function(key) {
                     if (key === excludedCapability) {
                         platform.log("Removing capability: " + excludedCapability + " for device: " + device.name);
-                        for (var k in capabilityToAttributeMap[key]) 
+                        var attributes = capabilityToAttributeMap[key];
+                        Object.keys(attributes).forEach(function(m) 
                         {
-                            var excludedAttribute = capabilityToAttributeMap[key][k];
+                            var excludedAttribute = attributes[m];
                             if ( that.platform.attributeLookup[excludedAttribute] ) {
                                 var characteristics = that.platform.attributeLookup[excludedAttribute][device.deviceid];
                                 for (var key in characteristics)
@@ -114,16 +123,25 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                                     if (characteristic) {
                                         var iid = characteristic.iid;
                                         for (var k in that.accessory.services) {
-                                            that.accessory.services[k].removeCharacteristic(characteristic);
-                                            if (that.accessory.services[k].characteristics.length === 0)
-                                                that.accessory.removeService(that.accessory.services[k]);
+                                            for (var l in that.accessory.services[k].optionalCharacteristics) {
+                                                if (that.accessory.services[k].optionalCharacteristics[l].UUID === characteristic.UUID) {
+                                                    that.accessory.services[k].removeCharacteristic(characteristic);
+                                                }
+                                            }
+                                            
+                                            for (var l in that.accessory.services[k].characteristics) {
+                                                if (that.accessory.services[k].characteristics[l].UUID === characteristic.UUID) {
+                                                    that.accessory.removeService(that.accessory.services[k]);
+                                                    break;
+                                                }
+                                            }
                                         }
                                     }
                                 }
                                 delete that.platform.attributeLookup[excludedAttribute][device.deviceid];
                                 delete that.device.attributes[excludedAttribute];
                             }
-                        }
+                        });
                     }   
                 });
             }
