@@ -107,10 +107,10 @@ When properly setup, you should see something like this in your Homebridge start
     Default to F<br>Ability to configure between Celsius and Fahrenheit. Possible values: "F" or "C"</small></p>
 
  * <p><u>mode_switches</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
-    Default to false<br>Create switches for modes and ability to switch modes by enabling such switches Possible values: true or false</small></p>
+    Default to false<br>Create switches for modes and ability to switch modes by enabling such switches Possible values: true or false<br>Requires HE fimrware 2.0.9 or newer</p>
 
  * <p><u>hsm</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
-    Default to false<br>Integrates HSM into Home app and allow to arm/disarm the hsm and receive notifications on intrusions</small></p>
+    Default to false<br>Integrates HSM into Home app and allow to arm/disarm the hsm and receive notifications on intrusions<br>Requires HE firmware 2.0.9 or newer</p>
 
 
 ## Capability Filtering
