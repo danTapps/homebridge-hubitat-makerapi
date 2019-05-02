@@ -38,7 +38,7 @@ function toTitleCase(str) {
 }
 
 function HE_ST_Accessory(platform, group, device, accessory) {
-//     console.log("HE_ST_Accessory: ", platform, util.inspect(device, false, null, true));
+    // console.log("HE_ST_Accessory: ", platform, util.inspect(device, false, null, true));
     this.deviceid = device.deviceid;
     this.name = device.name;
     this.platform = platform;
@@ -71,8 +71,69 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     {
         return (device.attributes.hasOwnProperty(attribute) && device.commands.hasOwnProperty(command));
     }
+
+    //Removing excluded attributes from config
+    for (var i = 0; i < device.excludedAttributes.length; i++) {
+        let excludedAttribute = device.excludedAttributes[i];
+        if (device.attributes.hasOwnProperty(excludedAttribute)) {
+            platform.log("Removing attribute: " + excludedAttribute + " for device: " + device.name);
+            delete device.attributes[excludedAttribute];
+        }
+    }
+    for (var i = 0; i < device.excludedCapabilities.length; i++) {
+        let excludedCapability = device.excludedCapabilities[i].toLowerCase();
+        if (device.capabilities.hasOwnProperty(excludedCapability)) {
+            Object.keys(capabilityToAttributeMap).forEach(function(key) {
+                if (key === excludedCapability) {
+                    platform.log("Removing capability: " + excludedCapability + " for device: " + device.name); 
+                    for (var k = 0; k < capabilityToAttributeMap[key].length; k++)
+                    {
+                        var excludedAttribute = capabilityToAttributeMap[key][k];
+                        if (device.attributes.hasOwnProperty(excludedAttribute)) {
+                            delete device.attributes[excludedAttribute];
+                        }
+                    }
+                }   
+            });
+        }
+    }
+
     //Removing excluded attributes from config
     function removeExculdedAttributes() {
+        var cacheCharacteristics = [];
+        var newCharacteristics = [];
+        //that.platform.log('Having a cached accessory, build a duplicate and see if I can detect obsolete characteristics');
+        var newAccessory = new HE_ST_Accessory(platform, group, device);
+        for (var k in newAccessory.accessory.services) {
+            //for (var l in newAccessory.accessory.services[k].optionalCharacteristics)
+            //    newCharacteristics.push(newAccessory.accessory.services[k].optionalCharacteristics[l].UUID);
+            for (var l in newAccessory.accessory.services[k].characteristics)
+                newCharacteristics.push(newAccessory.accessory.services[k].characteristics[l].UUID);
+        }
+
+        for (var k in that.accessory.services) {
+            for (var l in that.accessory.services[k].optionalCharacteristics) {
+                if (newCharacteristics.includes(that.accessory.services[k].optionalCharacteristics[l].UUID)) {
+                    //that.platform.log('has char' + that.accessory.services[k].optionalCharacteristics[l].UUID);
+                }
+                else {
+                    //that.platform.log('doesnt have char' + that.accessory.services[k].optionalCharacteristics[l].UUID);
+                    that.accessory.services[k].removeCharacteristic(that.accessory.services[k].optionalCharacteristics[l]);
+                }
+            }
+            for (var l in that.accessory.services[k].characteristics) {
+                if (newCharacteristics.includes(that.accessory.services[k].characteristics[l].UUID)) {
+                    //that.platform.log('has char'+that.accessory.services[k].characteristics[l].UUID);
+                }
+                else {
+                    //that.platform.log('doesnt have char'+that.accessory.services[k].characteristics[l].UUID);
+                    that.accessory.services[k].removeCharacteristic(that.accessory.services[k].characteristics[l]);
+                }
+            }
+            if (that.accessory.services[k].characteristics.length === 0)
+                that.accessory.removeService(that.accessory.services[k]);
+        }
+        return;
         for (var i = 0; i < that.device.excludedAttributes.length; i++) {
             let excludedAttribute = that.device.excludedAttributes[i];
             if (that.device.attributes.hasOwnProperty(excludedAttribute)) {
@@ -87,13 +148,18 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             for (var k in that.accessory.services) {
                                 for (var l in that.accessory.services[k].optionalCharacteristics) {
                                     if (that.accessory.services[k].optionalCharacteristics[l].UUID === characteristic.UUID) {
-                                        that.accessory.services[k].removeCharacteristic(characteristic);
+                                        that.platform.log.error('remove charact', characteristic);
+                                        //that.accessory.services[k].removeCharacteristic(characteristic);
+                                        characteristic.removeAllListeners();
                                     }
                                 }
 
                                 for (var l in that.accessory.services[k].characteristics) {
-                                    if (that.accessory.services[k].characteristics[l].UUID === characteristic.UUID) {
-                                        that.accessory.removeService(that.accessory.services[k]);
+                                    if ( (that.accessory.services[k].characteristics[l].iid !== null) && 
+                                        (that.accessory.services[k].characteristics[l].UUID === characteristic.UUID)) {
+                                        that.platform.log.error('remove service', that.accessory.services[k]);
+                                        //that.accessory.removeService(that.accessory.services[k]);
+                                        characteristic.removeAllListeners();
                                         break;
                                     }
                                 }
@@ -1221,7 +1287,8 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     }
 */
     //this.loadData(device, that);
-    removeExculdedAttributes();
+    if ((accessory !== null) && (accessory !==undefined))
+        removeExculdedAttributes();
 }
 
 function speedFanConversion(speedVal, has4Spd = true) {

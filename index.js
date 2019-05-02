@@ -45,7 +45,6 @@ function HE_ST_Platform(log, config, api) {
     this.access_token = config['access_token'];
     this.excludedAttributes = config["excluded_attributes"] || [];
     this.excludedCapabilities = config["excluded_capabilities"] || [];
-
     // This is how often it does a full refresh
     this.polling_seconds = config['polling_seconds'];
     // Get a full refresh every hour.
