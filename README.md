@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.2.0```**
+**```Current App version: 0.2.4```**
 
 <br>
 
@@ -20,8 +20,8 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.1.10*** - Fixed Hampton Bay Fan Component<br>
 ***v0.1.11 - v0.1.17*** - Several attempts to mess with messy fans...<br>
 ***v0.2.0*** - migrated to dynamic homebridge platform that removes the need of restarting homebridge after a device selection was changed in MakerAPI, configure homebridge to use Celsius, fixed fan tile on/off functionallity, ability to create switch tiles for modes and switching of modes, HSM integration, reduced load on Hubitat at plugin start by removing dependency on full detail API call, plugin startup speed improved, perform daily version check against NPMJS and print logging statement on newer versions available, 
+***v0.2.1 - v0.2.4*** - Fixed attribute filtering for cached devices <br>
 <br>
-
 # Explanation:
 
 ### Direct Updates
