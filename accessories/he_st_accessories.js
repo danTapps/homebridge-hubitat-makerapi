@@ -898,7 +898,11 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         that.deviceGroup = "fan";
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.Active)
             .on('get', function(callback) {
-                var fanLvl = speedFanConversion(that.device.attributes.speed, false);
+                var fanLvl = 0;
+                if (deviceHasAttributeCommand('level', 'setLevel'))
+                    fanLvl = that.device.attributes.level;
+                else
+                    fanLvl = speedFanConversion(that.device.attributes.speed, false);
                 callback(null, fanLvl>0);
             })
             .on('set', function(value,callback) {
@@ -921,14 +925,22 @@ function HE_ST_Accessory(platform, group, device, accessory) {
 
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.RotationSpeed)
             .on('get', function(callback) {
-                var fanLvl = speedFanConversion(that.device.attributes.speed, false);
+                var fanLvl = 0;
+                if (deviceHasAttributeCommand('level', 'setLevel'))
+                    fanLvl = that.device.attributes.level;
+                else
+                    fanLvl = speedFanConversion(that.device.attributes.speed, false);
                 callback(null, fanLvl);
             })
             .on('set', function(value, callback) {
             if (value > 0) {
                 let cmdStr = 'setSpeed';
                 let cmdVal = fanSpeedConversion(value, false);
-                //platform.log("Fan Command " + value + " (Str: " + cmdStr + ') | value: (' + cmdVal + ')');
+                if (deviceHasAttributeCommand('level', 'setLevel'))
+                {
+                    cmdStr = 'setLevel';
+                    cmdVal = value;
+                }
                 platform.api.runCommand(device.deviceid, cmdStr, {
                     value1: cmdVal
                 }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
