@@ -11,6 +11,7 @@ var Service,
     User,
     PlatformAccessory;
 const util = require('util');
+const URL = require('url');
 const uuidGen = require('./accessories/he_st_accessories').uuidGen;
 const uuidDecrypt = require('./accessories/he_st_accessories').uuidDecrypt;
 var Logger = require('./lib/Logger.js').Logger;
@@ -615,8 +616,8 @@ function he_eventsocket_SetupWebSocket(myHe_st_api) {
     const WebSocket = require('ws');
     var that = this;
     function connect(myHe_st_api) {
-        var r = /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/;
-        var url = 'ws://' + myHe_st_api.app_url.match(r) + '/eventsocket';
+        var parsed = URL.parse(myHe_st_api.app_url)
+        var url = `ws://${parsed.hostname}/eventsocket`;
         var ws = new WebSocket(url);
         myHe_st_api.log('attempt connection to ' + url);
         ws.onopen = function() {
