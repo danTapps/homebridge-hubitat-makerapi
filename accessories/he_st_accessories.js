@@ -1,6 +1,7 @@
 var inherits = require('util').inherits;
 var Accessory, Service, Characteristic, uuid, CommunityTypes, platformName, capabilityToAttributeMap;
 const util = require('util');
+var version = require('../package.json').version;
 const pluginName = 'homebridge-hubitat-makerapi';
 
 /*
@@ -166,12 +167,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         return myService;
     };    
 
-//    that.getaddService(Service.AccessoryInformation).setCharacteristic(Characteristic.Identify, (that.device.attributes.hasOwnProperty('switch')));
     that.getaddService(Service.AccessoryInformation).setCharacteristic(Characteristic.Name, that.name);
-    if (device.firmwareVersion) that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.FirmwareRevision, device.firmwareVersion);
-    if (device.manufacturerName) that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Manufacturer, device.manufacturerName);
-    if (device.modelName) that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Model, `${toTitleCase(device.modelName)}`);
-    //if (device.serialNumber) that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.SerialNumber, device.serialNumber);    
+    that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.FirmwareRevision, version);
+    that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Manufacturer, 'Hubitat');
+    that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Model, platformName);
     that.accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.SerialNumber, group+':'+device.deviceid);
     that.accessory.on('identify', function(paired, callback) {
         that.platform.log("%s - identify", that.accessory.displayName);
@@ -212,7 +211,6 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             .on('set', function(value, callback) {
                 if (value) {
                     platform.api.rebootHub().then(function(resp){callback(null, false);}).catch(function(err){callback(err);});
-                    //platform.api.setMode(callback, device.deviceid, that.name.toString().replace('Mode - ', ''));
                 }
             });
         platform.addAttributeUsage('reboot', device.deviceid, thisCharacteristic);
@@ -498,10 +496,8 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         {
             if ((deviceIsFan() === true) && (deviceHasAttributeCommand('speed', 'setSpeed') === true))
             {
-                //do nothing, we do you later.....
+                delete that.device.attributes['speed'];
             }
-            else
-            {
                 var serviceType = Service.Lightbulb;
                 var characteristicType = Characteristic.Brightness;
                 var factor = 1;
@@ -510,20 +506,42 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     characteristicType = Characteristic.RotationSpeed;
                     factor = 2.55;
                     this.deviceGroup = "fan";
+                    thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.Active)
+                        .on('get', function(callback) {
+                            callback(null, that.device.attributes.level>0);
+                        })
+                        .on('set', function(value,callback) {
+                            if (value === 0)
+                                platform.api.runCommand(device.deviceid, "setLevel", {
+                                    value1: "0"
+                                }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                            else
+                            {
+                                var fanValue = that.device.attributes.level;
+                                if (fanValue === 0)
+                                    fanValue = "100";
+                                platform.api.runCommand(device.deviceid, "setSpeed", {
+                                    value1: fanValue
+                                }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                            }
+                        });
+                        platform.addAttributeUsage('level', device.deviceid, thisCharacteristic);
                 }
 
                 thisCharacteristic = that.getaddService(serviceType).getCharacteristic(characteristicType)
                     .on('get', function(callback) {
-                        callback(null, parseInt(Math.round(that.device.attributes.level/factor)));
+                    //    callback(null, parseInt(Math.round(that.device.attributes.level*factor)));
+                        callback(null, that.device.attributes.level);
                     })
                     .on('set', function(value, callback) {
+                        that.platform.log('set value'+value+' factor:'+factor+' math:'+Math.round(value/factor));
                         platform.api.runCommand(device.deviceid, 'setLevel', {
-                            value1: Math.round(value*factor)//,
+                            //value1: Math.round(value/factor),
+                            value1: value,
                             //value2: 1
                         }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                     });
                 platform.addAttributeUsage('level', device.deviceid, thisCharacteristic);
-            }
         }
     }
     if (deviceHasAttributeCommand('hue', 'setHue'))
@@ -899,10 +917,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.Active)
             .on('get', function(callback) {
                 var fanLvl = 0;
-                if (deviceHasAttributeCommand('level', 'setLevel'))
-                    fanLvl = that.device.attributes.level;
-                else
-                    fanLvl = speedFanConversion(that.device.attributes.speed, false);
+                fanLvl = speedFanConversion(that.device.attributes.speed);
                 callback(null, fanLvl>0);
             })
             .on('set', function(value,callback) {
@@ -912,7 +927,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                 else
                 {
-                    var fanLvl = speedFanConversion(that.device.attributes.speed, false);
+                    var fanLvl = speedFanConversion(that.device.attributes.speed);
                     var fanValue = that.device.attributes.speed;
                     if (fanLvl === 0)
                         fanValue = "high";
@@ -926,21 +941,13 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.RotationSpeed)
             .on('get', function(callback) {
                 var fanLvl = 0;
-                if (deviceHasAttributeCommand('level', 'setLevel'))
-                    fanLvl = that.device.attributes.level;
-                else
-                    fanLvl = speedFanConversion(that.device.attributes.speed, false);
+                fanLvl = speedFanConversion(that.device.attributes.speed);
                 callback(null, fanLvl);
             })
             .on('set', function(value, callback) {
             if (value > 0) {
                 let cmdStr = 'setSpeed';
-                let cmdVal = fanSpeedConversion(value, false);
-                if (deviceHasAttributeCommand('level', 'setLevel'))
-                {
-                    cmdStr = 'setLevel';
-                    cmdVal = value;
-                }
+                let cmdVal = fanSpeedConversion(value);
                 platform.api.runCommand(device.deviceid, cmdStr, {
                     value1: cmdVal
                 }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
@@ -1246,61 +1253,36 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     //    removeExculdedAttributes();
 }
 
-function speedFanConversion(speedVal, has4Spd = true) {
-    if (has4Spd) {
-        switch (speedVal) {
-            case "low":
-                return 20;
-            case "medium-low":
-                return 40;
-            case "medium":
-                return 60;
-            case "medium-high":
-                return 80;
-            case "high":
-                return 100;
-            default:
-                return 0;
+function speedFanConversion(speedVal) {
+    switch (speedVal) {
+        case "low":
+            return 20;
+        case "medium-low":
+            return 40;
+        case "medium":
+            return 60;
+        case "medium-high":
+            return 80;
+        case "high":
+            return 100;
+        default:
+            return 0;
         }
-    }
-    else {
-        switch(speedVal) {
-            case "low":
-                return 32;
-            case "medium":
-                return 65;
-            case "high":
-                return 100;
-            default:
-                return 0;
-        }
-    }
     return speedVal;
 }
-function fanSpeedConversion(speedVal, has4Spd = true) {
+function fanSpeedConversion(speedVal) {
     if (speedVal <= 0) {
         return "off";
-    }
-    if (has4Spd) {
-        if (speedVal > 0 && speedVal <= 20) {
-            return "low";
-        } else if (speedVal > 20 && speedVal <= 40) {
-            return "medium-low";
-        } else if (speedVal > 40 && speedVal <= 60) {
-            return "medium";
-        } else if (speedVal > 60 && speedVal <= 80) {
-            return "medium-high";
-        } else if (speedVal > 80 && speedVal <= 100) {
-            return "high";
-        }
-    } else {
-        if (speedVal > 0 && speedVal <= 33) {
-            return "low";
-        } else if (speedVal > 33 && speedVal <= 66) {
-            return "medium";
-        } else if (speedVal > 66 && speedVal <= 99) {
-            return "high";
-        }
+    } else if (speedVal > 0 && speedVal <= 20) {
+        return "low";
+    } else if (speedVal > 20 && speedVal <= 40) {
+        return "medium-low";
+    } else if (speedVal > 40 && speedVal <= 60) {
+        return "medium";
+    } else if (speedVal > 60 && speedVal <= 80) {
+        return "medium-high";
+    } else if (speedVal > 80 && speedVal <= 100) {
+        return "high";
     }
     return speedVal;
 }
@@ -1370,4 +1352,5 @@ function loadData(data, myObject) {
 function getServices() {
     return this.accessory.services;
 }
+
 
