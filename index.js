@@ -1,8 +1,14 @@
 const pluginName = 'homebridge-hubitat-makerapi';
 const platformName = 'Hubitat-MakerAPI';
-var he_st_api = require('./lib/he_maker_api').api;
+
+if (pluginName === 'homebridge-hubitat-makerapi') {
+    var he_st_api = require('./lib/api-homebridge-hubitat-makerapi.js').api;
+} else {
+    var he_st_api = require('./lib/api-homebridge-hubitat-hubconnect.js').api;
+}
+const ignoreTheseAttributes = require('./lib/ignore-attributes.js').ignoreTheseAttributes;
+
 var InternalError = require('./lib/InternalError').InternalError;
-var ignoreTheseAttributes = require('./lib/he_maker_api.js').ignoreTheseAttributes;
 var Service,
     Characteristic,
     Accessory,
@@ -18,7 +24,7 @@ var Logger = require('./lib/Logger.js').Logger;
 
 module.exports = function(homebridge) {
     console.log("Homebridge Version: " + homebridge.version);
-    console.log("Plugin Version: hhm:" + npm_version);
+    console.log("Plugin Version: " + npm_version);
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
     Accessory = homebridge.hap.Accessory;
@@ -41,6 +47,16 @@ function HE_ST_Platform(log, config, api) {
     this.temperature_unit = config['temperature_unit'];
     if (this.temperature_unit === null || this.temperature_unit === undefined || (this.temperature_unit !== 'F' && this.temperature_unit !== 'C'))
         this.temperature_unit = 'F'; 
+    this.hubconnect_key = config['hubconnect_key'];
+    this.local_port = config['local_port'];
+    if (this.local_port === undefined || this.local_port === '') {
+        this.local_port = 20009;
+    }
+
+    this.local_ip = config['local_ip'];
+    if (this.local_ip === undefined || this.local_ip === '') {
+        this.local_ip = '0.0.0.0';
+    }    
     this.app_url = config['app_url'];
     this.app_id = config['app_id'];
     this.access_token = config['access_token'];
@@ -60,7 +76,10 @@ function HE_ST_Platform(log, config, api) {
     // This is how often it polls for subscription data.
     this.config = config;
     this.api = he_st_api;
-    this.log = Logger.withPrefix( this.config['name']+ ' hhm:' + npm_version);
+    if (pluginName === 'homebridge-hubitat-makerapi')
+        this.log = Logger.withPrefix( this.config['name']+ ' hhm:' + npm_version);
+    else
+        this.log = Logger.withPrefix( this.config['name']+ ' hhh:' + npm_version);
     this.deviceLookup = {};
     this.firstpoll = true;
     this.attributeLookup = {};
@@ -69,6 +88,10 @@ function HE_ST_Platform(log, config, api) {
     this.versionCheck = require('./lib/npm_version_check')(pluginName,npm_version,this.log,null);
     this.doVersionCheck();
     he_st_api.init(this.app_url, this.app_id, this.access_token, this.local_hub_ip, this.local_commands);
+    if (pluginName === 'homebridge-hubitat-makerapi')
+        this.receiver = require('./lib/receiver-homebridge-hubitat-makerapi.js').receiver;
+    else
+        this.receiver = require('./lib/receiver-homebridge-hubitat-hubconnect.js').receiver;
     this.hb_api.on('didFinishLaunching', this.didFinishLaunching.bind(this));
     this.asyncCallWait = 0;
 }
@@ -175,7 +198,7 @@ HE_ST_Platform.prototype = {
             setTimeout(that.didFinishLaunching.bind(that), 1000);
             return;
         }
-        this.log('Fetching ' + platformName + ' devices. This can take a while depending on the number of devices configured in MakerAPI!');
+        this.log('Fetching ' + platformName + ' devices. This can take a while depending on the number of devices are configured!');
         var that = this;
         var starttime = new Date();
         this.reloadData(function(foundAccessories) {
@@ -191,7 +214,7 @@ HE_ST_Platform.prototype = {
             }
             setInterval(that.reloadData.bind(that), that.polling_seconds * 1000);
             setInterval(that.doVersionCheck.bind(that), 24 * 60 * 60 * 1000); //60 seconds
-            he_eventsocket_SetupWebSocket(that);
+            that.receiver.start(that);
         });
     },
     removeAccessory: function(accessory) {
@@ -201,7 +224,7 @@ HE_ST_Platform.prototype = {
             {
                 that.hb_api.unregisterPlatformAccessories(pluginName, platformName, [accessory.accessory]);
                 if (that.deviceLookup[accessory.accessory.UUID]) {
-                    that.log("Device Removed - Name " + that.deviceLookup[accessory.accessory.UUID].name + ', ID ' + that.deviceLookup[accessory.accessory.UUID].deviceid);
+                    that.log.warn("Device Removed - Name " + that.deviceLookup[accessory.accessory.UUID].name + ', ID ' + that.deviceLookup[accessory.accessory.UUID].deviceid);
                     that.removeDeviceAttributeUsage(that.deviceLookup[accessory.accessory.UUID].deviceid);
                     if (that.deviceLookup.hasOwnProperty(accessory.accessory.UUID))
                         delete that.deviceLookup[accessory.accessory.UUID];
@@ -209,7 +232,7 @@ HE_ST_Platform.prototype = {
             }
             else
             {   
-                that.log("Remove stale cache device " + that.deviceLookup[accessory.UUID].displayName);
+                that.log.warn("Remove stale cache device " + that.deviceLookup[accessory.UUID].displayName);
                 that.hb_api.unregisterPlatformAccessories(pluginName, platformName, [that.deviceLookup[accessory.UUID]]);
                 delete that.deviceLookup[accessory.UUID];
             }
@@ -395,7 +418,6 @@ HE_ST_Platform.prototype = {
         if (this.disabled === true)
             return;
         var that = this;
-
         var deviceIdentifier = accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.SerialNumber).value.split(':');
         if (deviceIdentifier.length > 1) {
             that.asyncCallWait++;
@@ -586,15 +608,12 @@ HE_ST_Platform.prototype = {
             for (var j = 0; j < myUsage.length; j++) {
                 var accessory = that.deviceLookup[uuidGen(deviceid)];
                 if (accessory) {
-                    //console.log("setting " + accessory.device.attributes[attributeSet.attribute] + " to " + attributeSet.value + " for " + util.inspect(myUsage[j], false, 1, true ));
                     return accessory.device.attributes[attribute];
                 }
             }
         }
     },
     processFieldUpdate: function(attributeSet, that) {
-        // that.log("Processing Update");
-        // that.log(attributeSet);
         if (!(that.attributeLookup[attributeSet.attribute] && that.attributeLookup[attributeSet.attribute][attributeSet.device])) {
             return;
         }
@@ -603,7 +622,6 @@ HE_ST_Platform.prototype = {
             for (var j = 0; j < myUsage.length; j++) {
                 var accessory = that.deviceLookup[uuidGen(attributeSet.device)];
                 if (accessory) {
-                    //console.log("setting " + accessory.device.attributes[attributeSet.attribute] + " to " + attributeSet.value + " for " + util.inspect(myUsage[j], false, 1, true));
                     accessory.device.attributes[attributeSet.attribute] = attributeSet.value;
                     myUsage[j].getValue();
                 }
@@ -611,111 +629,4 @@ HE_ST_Platform.prototype = {
         }
     }
 };
-
-function he_eventsocket_SetupWebSocket(myHe_st_api) {
-    const WebSocket = require('ws');
-    var that = this;
-    function connect(myHe_st_api) {
-        var parsed = URL.parse(myHe_st_api.app_url)
-        var url = `ws://${parsed.hostname}/eventsocket`;
-        var ws = new WebSocket(url);
-        myHe_st_api.log('attempt connection to ' + url);
-        ws.onopen = function() {
-            myHe_st_api.log('connection to ' + url + ' established');
-        };
-    
-        ws.onmessage = function(e) {
-            var jsonData = JSON.parse(e.data);
-            var newChange = [];
-            if (jsonData['source'] === 'DEVICE')
-            {
-                if (myHe_st_api.isAttributeUsed(jsonData['name'], jsonData['deviceId']))
-                    newChange.push( { device: jsonData['deviceId'], attribute: jsonData['name'], value: jsonData['value'], date: new Date() , displayName: jsonData['displayName'] }  );
-                //else myHe_st_api.log('Ignore Attribute ' + jsonData['name'] + ' for device ' + jsonData['deviceId']);
-                
-            } 
-            else if (jsonData['source'] === 'LOCATION')
-            {
-                switch (jsonData['name'])
-                {
-                    case 'hsmStatus':
-                        newChange.push( {
-                            device: 'hsm' + myHe_st_api.config['name'],
-                            displayName: 'Alarm System ' + myHe_st_api.config['name'],
-                            attribute:  'alarmSystemStatus',
-                            value: jsonData['value'],
-                            date:  new Date()
-                        });
-                        newChange.push( {
-                            device: 'hsm' + myHe_st_api.config['name'],
-                            displayName: 'Alarm System ' + myHe_st_api.config['name'],
-                            attribute:  'alarmSystemCurrent',
-                            value: jsonData['value'],
-                            date:  new Date()
-                        });
-                        break;
-                    case 'hsmAlert':
-                        if (jsonData['value'] === 'cancel')
-                        {
-                            myHe_st_api.log('Received HSM Cancel');
-                            newChange.push( {
-                                device: 'hsm' + myHe_st_api.config['name'],
-                                displayName: 'Alarm System ' + myHe_st_api.config['name'],
-                                device:  'hsm' + myHe_st_api.config['name'],
-                                attribute:  'alarmSystemCurrent',
-                                value: myHe_st_api.getAttributeValue('alarmSystemStatus', 'hsm' + myHe_st_api.config['name'], myHe_st_api),
-                                date:  new Date()
-                            });
-                        }
-                        else
-                        {
-                            myHe_st_api.log('Received HSM Alert');
-                            newChange.push( {
-                                device: 'hsm' + myHe_st_api.config['name'],
-                                displayName: 'Alarm System ' + myHe_st_api.config['name'],
-                                device:  'hsm' + myHe_st_api.config['name'],
-                                attribute:  'alarmSystemCurrent',
-                                value: 'alarm_active',
-                                date:  new Date()
-                            });
-                        }
-                        break;
-                    case 'mode':
-                        for (var key in myHe_st_api.deviceLookup) {
-                            var accessory = myHe_st_api.deviceLookup[key];
-                            if (accessory.deviceGroup === "mode")
-                            {
-                                if (accessory.name === "Mode - " + jsonData['value'])
-                                    newChange.push( { device: accessory.deviceid, attribute: 'switch', value: 'on', date: new Date(), displayName: accessory.name });
-                                else
-                                    newChange.push( { device: accessory.deviceid, attribute: 'switch', value: 'off', date: new Date(), displayName: accessory.name });
-                            }
-                        }
-                        break;
-                }
-            }
-            newChange.forEach(function(element)
-            {
-                myHe_st_api.log('Change Event (Socket):', '(' + element['displayName'] + ':' + element['device'] + ') [' + (element['attribute'] ? element['attribute'].toUpperCase() : 'unknown') + '] is ' + element['value']);
-                myHe_st_api.processFieldUpdate(element, myHe_st_api);
-            });
-        };
-
-        ws.onclose = function(e) {
-          myHe_st_api.log('HE Eventsocket is closed. Reconnect will be attempted in 1 second. ', e.reason);
-          setTimeout(function() {
-            connect(myHe_st_api);
-          }, 1000);
-        };
-
-        ws.onerror = function(err) {
-          myHe_st_api.log('HE Eventsocket encountered error: ', err.message, 'Closing socket');
-          ws.close();
-        };
-
-    }
-    connect(myHe_st_api); 
-
-}
-
 
