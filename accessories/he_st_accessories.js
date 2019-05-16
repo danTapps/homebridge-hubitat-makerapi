@@ -118,6 +118,8 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     //Removing excluded attributes from config
     function removeExculdedAttributes() {
         //that.platform.log('Having a cached accessory, build a duplicate and see if I can detect obsolete characteristics');
+        var _device = device.deviceid;
+        device.deviceid = 'filter'+_device.deviceid;
         var newAccessory = new HE_ST_Accessory(platform, group, device);
         //console.log('accessory', that.accessory.services);
         //console.log('newAccessory', newAccessory.accessory.services);
@@ -156,6 +158,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         }
         //console.log('accessory', that.accessory.services);
         //console.log('newAccessory', newAccessory.accessory.services);
+        device.deviceid = _device;
         return;
     }
 
@@ -186,7 +189,6 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     };
     that.deviceGroup = 'unknown'; // that way we can easily tell if we set a device group
     var thisCharacteristic;
-    that.accessory.updateReachability(true);
     //platform.log('loading device: ' + JSON.stringify(device));
 
     if (group === "mode") {
@@ -286,11 +288,13 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             }
             thisCharacteristic = that.getaddService(Service.Thermostat).getCharacteristic(Characteristic.CurrentTemperature)
                 .on('get', function(callback) {
+                    let temp = 0;
                     if (platform.temperature_unit === 'C') {
-                        callback(null, Math.round(that.device.attributes.temperature * 10) / 10);
+                        temp = Math.round(that.device.attributes.temperature * 10) / 10;
                     } else {
-                        callback(null, Math.round((that.device.attributes.temperature - 32) / 1.8 * 10) / 10);
+                        temp = Math.round((that.device.attributes.temperature - 32) / 1.8 * 10) / 10;
                     }
+                    callback(null, temp);
                 });
             platform.addAttributeUsage('temperature', device.deviceid, thisCharacteristic);
             thisCharacteristic = that.getaddService(Service.Thermostat).getCharacteristic(Characteristic.TargetTemperature)
@@ -653,13 +657,18 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         that.deviceGroup = "sensor";
         if (that.device.attributes.temperature !== null)
         {
-            thisCharacteristic = that.getaddService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
+            thisCharacteristic = that.getaddService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature).setProps({
+                minValue: -100,
+                maxValue: 200
+                })
                 .on('get', function(callback) {
+                    let temp = 0;
                     if (platform.temperature_unit === 'C') {
-                        callback(null, Math.round(that.device.attributes.temperature * 10) / 10);
+                        temp = Math.round(that.device.attributes.temperature * 10) / 10;
                     } else {
-                        callback(null, Math.round((that.device.attributes.temperature - 32) / 1.8 * 10) / 10);
+                        temp = Math.round((that.device.attributes.temperature - 32) / 1.8 * 10) / 10;
                     }
+                    callback(null, temp);
                 });
             platform.addAttributeUsage('temperature', device.deviceid, thisCharacteristic);
             if (that.device.attributes.hasOwnProperty('tamper')) {                
