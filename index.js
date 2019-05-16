@@ -581,7 +581,7 @@ HE_ST_Platform.prototype = {
             this.deviceLookup[accessory.UUID] = accessory;
             done = true;
         }
-        require('deasync').loopWhile(function(){return !done;});
+        //require('deasync').loopWhile(function(){return !done;});
     },
     accessories: function(callback) {
         var that = this;
