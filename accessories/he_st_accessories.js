@@ -498,14 +498,14 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         }
         else
         {
-            if ((deviceIsFan() === true) && (deviceHasAttributeCommand('speed', 'setSpeed') === true))
-            {
-                delete that.device.attributes['speed'];
-            }
                 var serviceType = Service.Lightbulb;
                 var characteristicType = Characteristic.Brightness;
                 var factor = 1;
                 if (deviceIsFan()) {
+                    if (deviceHasAttributeCommand('speed', 'setSpeed') === true)
+                    {
+                        delete that.device.attributes['speed'];
+                    }
                     serviceType = Service.Fanv2;
                     characteristicType = Characteristic.RotationSpeed;
                     factor = 2.55;
@@ -524,7 +524,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                                 var fanValue = that.device.attributes.level;
                                 if (fanValue === 0)
                                     fanValue = "100";
-                                platform.api.runCommand(device.deviceid, "setSpeed", {
+                                platform.api.runCommand(device.deviceid, "setLevel", {
                                     value1: fanValue
                                 }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             }
@@ -538,7 +538,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                         callback(null, that.device.attributes.level);
                     })
                     .on('set', function(value, callback) {
-                        that.platform.log('set value'+value+' factor:'+factor+' math:'+Math.round(value/factor));
+                        //that.platform.log('set value'+value+' factor:'+factor+' math:'+Math.round(value/factor));
                         platform.api.runCommand(device.deviceid, 'setLevel', {
                             //value1: Math.round(value/factor),
                             value1: value,
@@ -657,9 +657,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         that.deviceGroup = "sensor";
         if (that.device.attributes.temperature !== null)
         {
-            thisCharacteristic = that.getaddService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature).setProps({
-                minValue: -100,
-                maxValue: 200
+            thisCharacteristic = that.getaddService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
+                .setProps({
+                    minValue: -100,
+                    maxValue: 200
                 })
                 .on('get', function(callback) {
                     let temp = 0;
@@ -972,22 +973,21 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     }
     if (that.device.attributes.hasOwnProperty('valve')) 
     {
-        deviceGroup = "valve";
+        that.deviceGroup = "valve";
         let valveType = 0;
-
         //Gets the inUse Characteristic
         thisCharacteristic = that.getaddService(Service.Valve).getCharacteristic(Characteristic.InUse)
             .on('get', function(callback) {
                 callback(null, that.device.attributes.valve === 'open' ? Characteristic.InUse.IN_USE : Characteristic.InUse.NOT_IN_USE);
             });
-        platform.addAttributeUsage('inUse', device.deviceid, thisCharacteristic);
+        platform.addAttributeUsage('valve', device.deviceid, thisCharacteristic);
 
         //Defines the valve type (irrigation or generic)
         thisCharacteristic = that.getaddService(Service.Valve).getCharacteristic(Characteristic.ValveType)
             .on('get', function(callback) {
                 callback(null, valveType);
             });
-        platform.addAttributeUsage('valveType', device.deviceid, thisCharacteristic);
+        platform.addAttributeUsage('valve', device.deviceid, thisCharacteristic);
 
         //Defines Valve State (opened/closed)
         thisCharacteristic = that.getaddService(Service.Valve).getCharacteristic(Characteristic.Active)
@@ -997,9 +997,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             .on('set', function(value, callback) {
                 // if (device.attributes.inStandby !== 'true') {
                 if (value) {
-                    platform.api.runCommand(device.deviceid, 'on').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                    platform.api.runCommand(device.deviceid, 'open').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                 } else {
-                    platform.api.runCommand(device.deviceid, 'off').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                    platform.api.runCommand(device.deviceid, 'close').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                 }
                 // }
             });
@@ -1361,5 +1361,6 @@ function loadData(data, myObject) {
 function getServices() {
     return this.accessory.services;
 }
+
 
 
