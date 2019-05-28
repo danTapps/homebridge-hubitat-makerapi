@@ -23,8 +23,9 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.2.1 - v0.2.4*** - Fixed attribute filtering for cached devices <br>
 ***v0.2.5*** allows correct usage of DNS host names instead of IP address to connect to hubitat, fans that support setLevel use setLevel instead of setSpeed to allow finer granularity, code baselined with homebridge-hubitat-hubconnect plugin to allow faster cross-sharing of improvements<br>
 ***v0.2.6*** Fixed issue with multi sensors not updating temperature and humidity, fixed issue that temperature can't go negative<br>
-***v0.2.7 - v.0.2.8*** problems with deasync module, removed it
-<br>
+***v0.2.7 - v.0.2.8*** problems with deasync module, removed it<br>
+***v0.2.9*** fixed on/off for hampton bay controller, fixed water valve<br>
+
 
 # Explanation:
 
