@@ -502,6 +502,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 var characteristicType = Characteristic.Brightness;
                 var factor = 1;
                 if (deviceIsFan()) {
+                    var listenTo = 'level';
                     if (deviceHasAttributeCommand('speed', 'setSpeed') === true)
                     {
                         delete that.device.attributes['speed'];
@@ -512,24 +513,38 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     this.deviceGroup = "fan";
                     thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.Active)
                         .on('get', function(callback) {
-                            callback(null, that.device.attributes.level>0);
+                            var state = that.device.attributes.level>0;
+                            if (deviceHasAttributeCommand('switch', 'on') === true) {
+                                state = that.device.attributes.switch === 'on' ? true : false;
+                                listenTo = 'switch';
+                            }
+                            callback(null, state);
                         })
                         .on('set', function(value,callback) {
+                            var cmd = 'setLevel';
+                            var cmdValue = null;
                             if (value === 0)
-                                platform.api.runCommand(device.deviceid, "setLevel", {
-                                    value1: "0"
+                                cmdValue = "0";
+                            else 
+                                cmdValue = "100";
+                            if (deviceHasAttributeCommand('switch', 'on') === true) {
+                                if (value === 0) {
+                                    cmd = 'off';
+                                    cmdValue = null;
+                                }
+                                else {
+                                    cmd = 'on';
+                                    cmdValue = null;
+                                }
+                            }
+                            if (cmdValue)
+                                platform.api.runCommand(device.deviceid, cmd, {
+                                    value1: cmdValue
                                 }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             else
-                            {
-                                var fanValue = that.device.attributes.level;
-                                if (fanValue === 0)
-                                    fanValue = "100";
-                                platform.api.runCommand(device.deviceid, "setLevel", {
-                                    value1: fanValue
-                                }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
-                            }
+                                platform.api.runCommand(device.deviceid, cmd).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         });
-                        platform.addAttributeUsage('level', device.deviceid, thisCharacteristic);
+                        platform.addAttributeUsage(listenTo, device.deviceid, thisCharacteristic);
                 }
 
                 thisCharacteristic = that.getaddService(serviceType).getCharacteristic(characteristicType)
