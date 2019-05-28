@@ -518,6 +518,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                                 state = that.device.attributes.switch === 'on' ? true : false;
                                 listenTo = 'switch';
                             }
+                            platform.log(that.name + ' -> getting fan state: ' + state + ' determined by ' + listenTo);
                             callback(null, state);
                         })
                         .on('set', function(value,callback) {
@@ -537,6 +538,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                                     cmdValue = null;
                                 }
                             }
+                            platform.log(that.name + ' -> setting fan state to on with cmd: ' + cmd + ' and value: ' + cmdValue);
                             if (cmdValue)
                                 platform.api.runCommand(device.deviceid, cmd, {
                                     value1: cmdValue
