@@ -507,6 +507,8 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     {
                         delete that.device.attributes['speed'];
                     }
+                    if (deviceHasAttributeCommand('switch', 'on') === true)
+                        listenTo = 'switch';
                     serviceType = Service.Fanv2;
                     characteristicType = Characteristic.RotationSpeed;
                     factor = 2.55;
@@ -514,10 +516,8 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     thisCharacteristic = that.getaddService(Service.Fanv2).getCharacteristic(Characteristic.Active)
                         .on('get', function(callback) {
                             var state = that.device.attributes.level>0;
-                            if (deviceHasAttributeCommand('switch', 'on') === true) {
+                            if (deviceHasAttributeCommand('switch', 'on') === true)
                                 state = that.device.attributes.switch === 'on' ? true : false;
-                                listenTo = 'switch';
-                            }
                             platform.log(that.name + ' -> getting fan state: ' + state + ' determined by ' + listenTo);
                             callback(null, state);
                         })
