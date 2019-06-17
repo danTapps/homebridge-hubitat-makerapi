@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.2.11```**
+**```Current App version: 0.2.13```**
 
 <br>
 
@@ -27,7 +27,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.2.9*** fixed on/off for hampton bay controller, fixed water valve<br>
 ***v0.2.10*** Hampton Bay Fan Controllers say they have speed level even though they are off, let's fix that<br>
 ***v0.2.11*** Added some debug for fans....
-
+***v0.2.13*** Fixed garage door implementation and set obstruction when status is unknown/stopped
 # Explanation:
 
 ### Direct Updates
