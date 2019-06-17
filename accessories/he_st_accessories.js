@@ -719,11 +719,16 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     }
     if (that.device.attributes.hasOwnProperty('door')) {
         that.deviceGroup = "door";
+        if ((that.device.attributes.door === 'closed') || (that.device.attributes.door === 'closing'))
+            that.device.attributes.doorTarget = 'closed';
+        if ((that.device.attributes.door === 'open') ||  (that.device.attributes.door === 'opening'))
+            that.device.attributes.doorTarget = 'open';
+    
         thisCharacteristic = that.getaddService(Service.GarageDoorOpener).getCharacteristic(Characteristic.TargetDoorState)
             .on('get', function(callback) {
-                if (that.device.attributes.door === 'closed' || that.device.attributes.door === 'closing') {
+                if (that.device.attributes.doorTarget === 'closed') {
                     callback(null, Characteristic.TargetDoorState.CLOSED);
-                } else if (that.device.attributes.door === 'open' || that.device.attributes.door === 'opening') {
+                } else if (that.device.attributes.doorTarget === 'open') {
                     callback(null, Characteristic.TargetDoorState.OPEN);
                 }
             })
@@ -736,30 +741,57 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     that.device.attributes.door = 'closing';
                 }
             });
-        platform.addAttributeUsage('door', device.deviceid, thisCharacteristic);
+        platform.addAttributeUsage('doorTarget', device.deviceid, thisCharacteristic);
 
         thisCharacteristic = that.getaddService(Service.GarageDoorOpener).getCharacteristic(Characteristic.CurrentDoorState)
            .on('get', function(callback) {
                 switch (that.device.attributes.door) {
                     case 'open':
-                        callback(null, Characteristic.TargetDoorState.OPEN);
-                        break;
                     case 'opening':
-                        callback(null, Characteristic.TargetDoorState.OPENING);
+                        platform.processFieldUpdate({
+                            device: device.deviceid,
+                            displayName: device.name,
+                            attribute:  'doorTarget',
+                            value: 'open',
+                            date:  new Date()
+                        }, platform);
                         break;
                     case 'closed':
-                        callback(null, Characteristic.TargetDoorState.CLOSED);
+                    case 'closing':
+                        platform.processFieldUpdate({
+                            device: device.deviceid,
+                            displayName: device.name,
+                            attribute:  'doorTarget',
+                            value: 'closed',
+                            date:  new Date()
+                        }, platform);
+                        break;
+                }
+                switch (that.device.attributes.door) {
+                    case 'open':
+                        callback(null, Characteristic.CurrentDoorState.OPEN);
+                        that.getaddService(Service.GarageDoorOpener).setCharacteristic(Characteristic.ObstructionDetected, false);
+                        break;
+                    case 'opening':
+                        callback(null, Characteristic.CurrentDoorState.OPENING);
+                        that.getaddService(Service.GarageDoorOpener).setCharacteristic(Characteristic.ObstructionDetected, false);
+                        break;
+                    case 'closed':
+                        callback(null, Characteristic.CurrentDoorState.CLOSED);
+                        that.getaddService(Service.GarageDoorOpener).setCharacteristic(Characteristic.ObstructionDetected, false);
                         break;
                     case 'closing':
-                        callback(null, Characteristic.TargetDoorState.CLOSING);
+                        callback(null, Characteristic.CurrentDoorState.CLOSING);
+                        that.getaddService(Service.GarageDoorOpener).setCharacteristic(Characteristic.ObstructionDetected, false);
                         break;
                     default:
-                        callback(null, Characteristic.TargetDoorState.STOPPED);
+                        callback(null, Characteristic.CurrentDoorState.STOPPED);
+                        that.getaddService(Service.GarageDoorOpener).setCharacteristic(Characteristic.ObstructionDetected, true);
                         break;
                 }
             });
         platform.addAttributeUsage('door', device.deviceid, thisCharacteristic);
-        that.getaddService(Service.GarageDoorOpener).setCharacteristic(Characteristic.ObstructionDetected, false);
+        //    that.getaddService(Service.GarageDoorOpener).setCharacteristic(Characteristic.ObstructionDetected, false);
     }
     if (that.device.attributes.hasOwnProperty('smoke')) {
         that.deviceGroup = "sensor";

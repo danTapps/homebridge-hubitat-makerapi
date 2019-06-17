@@ -106,11 +106,12 @@ HE_ST_Platform.prototype = {
             that.versionCheck().then(function(resp){
                 if (resp.versionCheckComplete && !resp.versionIsCurrent)
                 {
-                    if (that.version_speak_device != undefined && that.version_speak_device != null)
+/*                    if (that.version_speak_device != undefined && that.version_speak_device != null)
                         that.log('send pushover');
                         that.api.runCommand(that.version_speak_device, 'speak', {
                                 value1: ('a_newer_version_(' + resp.npm_version + ')_of_the_' + pluginName + '_plugin_is_available_on_NPMJS.')
                             }).then(function(resp) { }).catch(function(err) { });
+*/
                 }
             }).catch(function(resp){
             });
