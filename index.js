@@ -22,6 +22,7 @@ const os = require('os');
 const uuidGen = require('./accessories/he_st_accessories').uuidGen;
 const uuidDecrypt = require('./accessories/he_st_accessories').uuidDecrypt;
 const Logger = require('./lib/Logger.js').Logger;
+const setDebugEnabled = require('./lib/Logger.js').setDebugEnabled;
 
 module.exports = function(homebridge) {
     console.log("Homebridge Version: " + homebridge.version);
@@ -89,7 +90,8 @@ function HE_ST_Platform(log, config, api) {
     this.version_speak_device = this.config['version_speak_device'];
     this.versionCheck = require('./lib/npm_version_check')(pluginName,npm_version,this.log,null);
     this.doVersionCheck();
-    he_st_api.init(this.app_url, this.app_id, this.access_token, this.local_hub_ip, this.local_commands);
+    he_st_api.init(this.app_url, this.app_id, this.access_token, this.local_hub_ip, this);
+    setDebugEnabled((config['debug'] || false));
     if (pluginName === 'homebridge-hubitat-makerapi')
         this.receiver = require('./lib/receiver-homebridge-hubitat-makerapi.js').receiver;
     else
