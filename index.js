@@ -22,7 +22,6 @@ const os = require('os');
 const uuidGen = require('./accessories/he_st_accessories').uuidGen;
 const uuidDecrypt = require('./accessories/he_st_accessories').uuidDecrypt;
 const Logger = require('./lib/Logger.js').Logger;
-const setDebugEnabled = require('./lib/Logger.js').setDebugEnabled;
 
 module.exports = function(homebridge) {
     console.log("Homebridge Version: " + homebridge.version);
@@ -44,12 +43,23 @@ function HE_ST_Platform(log, config, api) {
         log('Plugin not configured in config.json, disabled plugin');
         return null;
     }
-
+    var logFileSettings = null;
+    if (config['logFile']) {
+        if (config['logFile'].enabled) {
+           logFileSettings = {};
+           logFileSettings.path = config['logFile'].path || api['user'].storagePath();
+           logFileSettings.file = config['logFile'].file || "homebridge-hubitat.log";
+           logFileSettings.compress = config['logFile'].compress || true;
+           logFileSettings.keep = config['logFile'].keep || 5;
+           logFileSettings.size = config['logFile'].size || '10m';
+        }
+    }
+ 
     this.config = config; 
     if (pluginName === 'homebridge-hubitat-makerapi')
-        this.log = Logger.withPrefix( this.config['name']+ ' hhm:' + npm_version);
+        this.log = Logger.withPrefix( this.config['name']+ ' hhm:' + npm_version, config['debug'] || false, logFileSettings);
     else
-        this.log = Logger.withPrefix( this.config['name']+ ' hhh:' + npm_version);
+        this.log = Logger.withPrefix( this.config['name']+ ' hhh:' + npm_version, config['debug'] || false, logFileSettings);
     this.platformName = platformName;
     this.temperature_unit = config['temperature_unit'];
     if (this.temperature_unit === null || this.temperature_unit === undefined || (this.temperature_unit !== 'F' && this.temperature_unit !== 'C'))
@@ -91,7 +101,6 @@ function HE_ST_Platform(log, config, api) {
     this.versionCheck = require('./lib/npm_version_check')(pluginName,npm_version,this.log,null);
     this.doVersionCheck();
     he_st_api.init(this.app_url, this.app_id, this.access_token, this.local_hub_ip, this);
-    setDebugEnabled((config['debug'] || false));
     if (pluginName === 'homebridge-hubitat-makerapi')
         this.receiver = require('./lib/receiver-homebridge-hubitat-makerapi.js').receiver;
     else

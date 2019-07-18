@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.2.14```**
+**```Current App version: 0.2.15```**
 
 <br>
 
@@ -29,6 +29,8 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.2.11*** Added some debug for fans....<br>
 ***v0.2.13*** Fixed garage door implementation and set obstruction when status is unknown/stopped<br>
 ***v0.2.14*** Added "debug" mode to see calls to MakerAPI in output. See description below on how to enable it. <br>
+***v0.2.15*** Added ability to write logging to file
+
 # Explanation:
 
 ### Direct Updates
@@ -92,6 +94,14 @@ When properly setup, you should see something like this in your Homebridge start
    <span style="color: orange">       &quot;power&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: orange">       &quot;humidity&quot;</span>
    <span style="color: #f8f8f2">    ]</span>
+   <span style="color: #f8f8f2">},</span>
+   <span style="color: #f92672">&quot;logFile&quot;</span><span style="color: #f8f8f2">: {</span>
+   <span style="color: #f92672">      &quot;enabled&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">true</span><span style="color: #f8f8f2">,</span>
+   <span style="color: #f92672">      &quot;path&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;&quot;</span><span style="color: #f8f8f2">,</span>
+   <span style="color: #f92672">      &quot;file&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;&quot;</span><span style="color: #f8f8f2">,</span>
+   <span style="color: #f92672">      &quot;compress&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">true</span><span style="color: #f8f8f2">,</span>
+   <span style="color: #f92672">      &quot;keep&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">5</span><span style="color: #f8f8f2">,</span>
+   <span style="color: #f92672">      &quot;size&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;10m&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f8f8f2">}<br>}</span>
 </pre></div>
 
@@ -120,9 +130,29 @@ When properly setup, you should see something like this in your Homebridge start
  * <p><u>hsm</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
     Default to false<br>Integrates HSM into Home app and allow to arm/disarm the hsm and receive notifications on intrusions<br>Requires HE firmware 2.0.9 or newer</p>
 
- * <p><u>debug</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>^M
-    Default to false<br>Enables debugging of HTTP calls to MakerAPI to troubleshoot issues</p>^M
+ * <p><u>debug</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    Default to false<br>Enables debugging of HTTP calls to MakerAPI to troubleshoot issues</p>
+ 
+ * <p><u>logFile</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    Settings to enable logging to file
 
+ * <p><u>logFile -> enabled</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    Enable logging to file. Default is false. Set to true to enable file logging
+
+ * <p><u>logFile -> path</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    Path to store log files. Defaults to path where config.json is stored - Only applicable if logFile -> enable is set to true
+
+ * <p><u>logFile -> file</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    Filename of log file. Default is homebridge-hubitat.log - Only applicable if logFile -> enable is set to true
+
+ * <p><u>logFile -> compress</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    Compress log files when they rotate. Default is true - Only applicable if logFile -> enable is set to true
+
+ * <p><u>logFile -> keep</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    Number of log files to keep before deleting old log files. Default is 5 - Only applicable if logFile -> enable is set to true
+
+ * <p><u>logFile -> size</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    Maximum size of log file. Default is 10m - Only applicable if logFile -> enable is set to true
 
 ## Capability Filtering
 The **homebridge-hubitat-makerapi** creates Homekit devices based on the attributes of devices. See *** Attribute Filtering *** below.
