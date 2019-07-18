@@ -136,23 +136,23 @@ When properly setup, you should see something like this in your Homebridge start
  * <p><u>logFile</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
     Settings to enable logging to file. Uses winston logging facility 
 
- * * <p><u>enabled</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
-    Enable logging to file. Default is false. Set to true to enable file logging
+   * <p><u>enabled</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+      Enable logging to file. Default is false. Set to true to enable file logging
 
- * * <p><u>path</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
-    Path to store log files. Defaults to path where config.json is stored - Only applicable if logFile -> enable is set to true
+   * <p><u>path</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+      Path to store log files. Defaults to path where config.json is stored - Only applicable if logFile -> enable is set to true
 
- * * <p><u>file</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
-    Filename of log file. Default is homebridge-hubitat.log - Only applicable if logFile -> enable is set to true
+   * <p><u>file</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+      Filename of log file. Default is homebridge-hubitat.log - Only applicable if logFile -> enable is set to true
 
- * * <p><u>compress</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
-    Compress log files when they rotate. Default is true - Only applicable if logFile -> enable is set to true
+   * <p><u>compress</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+      Compress log files when they rotate. Default is true - Only applicable if logFile -> enable is set to true
 
- * * <p><u>keep</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
-    Number of log files to keep before deleting old log files. Default is 5 - Only applicable if logFile -> enable is set to true
+   * <p><u>keep</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+      Number of log files to keep before deleting old log files. Default is 5 - Only applicable if logFile -> enable is set to true
 
- * * <p><u>size</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
-    Maximum size of log file. Default is 10m - Only applicable if logFile -> enable is set to true
+   * <p><u>size</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+      Maximum size of log file. Default is 10m - Only applicable if logFile -> enable is set to true
 
 ## Capability Filtering
 The **homebridge-hubitat-makerapi** creates Homekit devices based on the attributes of devices. See *** Attribute Filtering *** below.
