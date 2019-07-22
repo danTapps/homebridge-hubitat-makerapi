@@ -403,6 +403,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     } else {
                         temp = value * 1.8 + 32;
                     }
+                    temp = Math.round(temp);
                     platform.api.runCommand(device.deviceid, 'setHeatingSetpoint', {
                         value1: temp
                     }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
@@ -425,6 +426,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     } else {
                         temp = value * 1.8 + 32;
                     }
+                    temp = Math.round(temp);
                     platform.api.runCommand(device.deviceid, 'setCoolingSetpoint', {
                         value1: temp
                     }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
@@ -1410,6 +1412,7 @@ function loadData(data, myObject) {
 function getServices() {
     return this.accessory.services;
 }
+
 
 
 
