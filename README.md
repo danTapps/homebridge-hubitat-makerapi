@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.2.15```**
+**```Current App version: 0.2.16```**
 
 <br>
 
@@ -29,8 +29,8 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.2.11*** Added some debug for fans....<br>
 ***v0.2.13*** Fixed garage door implementation and set obstruction when status is unknown/stopped<br>
 ***v0.2.14*** Added "debug" mode to see calls to MakerAPI in output. See description below on how to enable it. <br>
-***v0.2.15*** Added ability to write logging to file
-
+***v0.2.15*** Added ability to write logging to file<br>
+***v0.2.16*** Fixed rounding issue for thermostats in auto mode<br>
 # Explanation:
 
 ### Direct Updates
