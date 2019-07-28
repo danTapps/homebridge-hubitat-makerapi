@@ -437,21 +437,20 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     if (that.device.attributes.hasOwnProperty('switch') && group !== 'mode' && !deviceIsFan())
     {
         var serviceType = null;
-        if (deviceHasAttributeCommand('level', 'setLevel') || deviceHasAttributeCommand('hue', 'setHue') || deviceHasAttributeCommand('saturation', 'setSaturation'))
-        {
-            if (deviceIsFan())
-            {
+        if (
+            deviceHasAttributeCommand("level", "setLevel") ||
+            deviceHasAttributeCommand("hue", "setHue") ||
+            deviceHasAttributeCommand("saturation", "setSaturation") ||
+            deviceHasAttributeCommand("colorTemperature", "setColorTemperature")
+        ) {
+            if (deviceIsFan()) {
                 that.deviceGroup = "fan";
                 serviceType = Service.Fanv2;
-            }
-            else
-            {
+            } else {
                 that.deviceGroup = "lights";
                 serviceType = Service.Lightbulb;
             }
-        }
-        else
-        {
+        } else {
             that.deviceGroup = "switch";
             serviceType = Service.Switch;
         }
@@ -594,6 +593,21 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         });
         platform.addAttributeUsage('saturation', device.deviceid, thisCharacteristic);
+    }
+    if (deviceHasAttributeCommand("colorTemperature", "setColorTemperature"))
+    {
+        that.deviceGroup = "lights";
+        thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.ColorTemperature)
+                        .on('get', function(callback) {
+                            callback(null, Math.round(1000000 / parseInt(that.device.attributes.colorTemperature)));
+                        })
+                        .on('set', function(value, callback) {
+                            value = Math.round(1000000 / value)
+                            platform.api.runCommand(device.deviceid, 'setColorTemperature', {
+                                value1: value
+                            }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                        });
+        platform.addAttributeUsage('colorTemperature', device.deviceid, thisCharacteristic);
     }
     if (that.device.attributes.hasOwnProperty('motion'))
     {
