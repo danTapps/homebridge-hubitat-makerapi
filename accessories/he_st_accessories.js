@@ -309,12 +309,14 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             temp = that.device.attributes.heatingSetpoint;
                             break;
                         default:
-                            // This should only refer to auto
-                            // Choose closest target as single target
-                            var high = that.device.attributes.coolingSetpoint;
-                            var low = that.device.attributes.heatingSetpoint;
-                            var cur = that.device.attributes.temperature;
-                            temp = Math.abs(high - cur) < Math.abs(cur - low) ? high : low;
+                            switch(that.device.attributes.thermostatOperatingState) {
+                                case 'cooling':
+                                    temp = that.device.attributes.coolingSetpoint;
+                                    break;
+                                default:
+                                    temp = that.device.attributes.heatingSetpoint;
+                                    break;
+                            }
                             break;
                     }
                     if (!temp) {
@@ -358,6 +360,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                         default:
                             // This should only refer to auto
                             // Choose closest target as single target
+                            /*
                             var high = that.device.attributes.coolingSetpoint;
                             var low = that.device.attributes.heatingSetpoint;
                             var cur = that.device.attributes.temperature;
@@ -371,6 +374,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                                     value1: temp
                                 }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             }
+                            */
                             break;
                     }
                 });
