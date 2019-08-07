@@ -3,6 +3,7 @@ var Accessory, Service, Characteristic, uuid, CommunityTypes, platformName, capa
 const util = require('util');
 var version = require('../package.json').version;
 const pluginName = 'homebridge-hubitat-makerapi';
+const mired = require('mired');
 
 /*
  *   HE_ST Accessory
@@ -441,7 +442,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     if (that.device.attributes.hasOwnProperty('switch') && group !== 'mode' && !deviceIsFan())
     {
         var serviceType = null;
-        if (deviceHasAttributeCommand('level', 'setLevel') || deviceHasAttributeCommand('hue', 'setHue') || deviceHasAttributeCommand('saturation', 'setSaturation'))
+        if (deviceHasAttributeCommand('level', 'setLevel') 
+            || deviceHasAttributeCommand('hue', 'setHue') 
+            || deviceHasAttributeCommand('saturation', 'setSaturation')
+            || deviceHasAttributeCommand('colorTemperature', 'setColorTemperature'))
         {
             if (deviceIsFan())
             {
@@ -598,6 +602,20 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         });
         platform.addAttributeUsage('saturation', device.deviceid, thisCharacteristic);
+    }
+    if (deviceHasAttributeCommand('colorTemperature', 'setColorTemperature'))
+    {
+        that.deviceGroup = "lights";
+        thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.ColorTemperature)
+                        .on('get', function(callback) {
+                            callback(null, mired.kelvinToMired(parseInt(that.device.attributes.colorTemperature)));
+                        })
+                        .on('set', function(value, callback) {
+                            platform.api.runCommand(device.deviceid, 'setColorTemperature', {
+                                value1: round(mired.miredToKelvin(value))
+                            }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                        });
+        platform.addAttributeUsage('colorTemperature', device.deviceid, thisCharacteristic);
     }
     if (that.device.attributes.hasOwnProperty('motion'))
     {
