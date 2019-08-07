@@ -3,6 +3,7 @@ var Accessory, Service, Characteristic, uuid, CommunityTypes, platformName, capa
 const util = require('util');
 var version = require('../package.json').version;
 const pluginName = 'homebridge-hubitat-makerapi';
+const mired = require('mired');
 
 /*
  *   HE_ST Accessory
@@ -309,12 +310,14 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             temp = that.device.attributes.heatingSetpoint;
                             break;
                         default:
-                            // This should only refer to auto
-                            // Choose closest target as single target
-                            var high = that.device.attributes.coolingSetpoint;
-                            var low = that.device.attributes.heatingSetpoint;
-                            var cur = that.device.attributes.temperature;
-                            temp = Math.abs(high - cur) < Math.abs(cur - low) ? high : low;
+                            switch(that.device.attributes.thermostatOperatingState) {
+                                case 'cooling':
+                                    temp = that.device.attributes.coolingSetpoint;
+                                    break;
+                                default:
+                                    temp = that.device.attributes.heatingSetpoint;
+                                    break;
+                            }
                             break;
                     }
                     if (!temp) {
@@ -358,6 +361,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                         default:
                             // This should only refer to auto
                             // Choose closest target as single target
+                            /*
                             var high = that.device.attributes.coolingSetpoint;
                             var low = that.device.attributes.heatingSetpoint;
                             var cur = that.device.attributes.temperature;
@@ -371,6 +375,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                                     value1: temp
                                 }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             }
+                            */
                             break;
                     }
                 });
@@ -437,7 +442,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     if (that.device.attributes.hasOwnProperty('switch') && group !== 'mode' && !deviceIsFan())
     {
         var serviceType = null;
-        if (deviceHasAttributeCommand('level', 'setLevel') || deviceHasAttributeCommand('hue', 'setHue') || deviceHasAttributeCommand('saturation', 'setSaturation'))
+        if (deviceHasAttributeCommand('level', 'setLevel') 
+            || deviceHasAttributeCommand('hue', 'setHue') 
+            || deviceHasAttributeCommand('saturation', 'setSaturation')
+            || deviceHasAttributeCommand('colorTemperature', 'setColorTemperature'))
         {
             if (deviceIsFan())
             {
@@ -594,6 +602,20 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         });
         platform.addAttributeUsage('saturation', device.deviceid, thisCharacteristic);
+    }
+    if (deviceHasAttributeCommand('colorTemperature', 'setColorTemperature'))
+    {
+        that.deviceGroup = "lights";
+        thisCharacteristic = that.getaddService(Service.Lightbulb).getCharacteristic(Characteristic.ColorTemperature)
+                        .on('get', function(callback) {
+                            callback(null, mired.kelvinToMired(parseInt(that.device.attributes.colorTemperature)));
+                        })
+                        .on('set', function(value, callback) {
+                            platform.api.runCommand(device.deviceid, 'setColorTemperature', {
+                                value1: Math.round(mired.miredToKelvin(value))
+                            }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                        });
+        platform.addAttributeUsage('colorTemperature', device.deviceid, thisCharacteristic);
     }
     if (that.device.attributes.hasOwnProperty('motion'))
     {

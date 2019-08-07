@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.2.16```**
+**```Current App version: 0.2.17```**
 
 <br>
 
@@ -31,6 +31,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.2.14*** Added "debug" mode to see calls to MakerAPI in output. See description below on how to enable it. <br>
 ***v0.2.15*** Added ability to write logging to file<br>
 ***v0.2.16*** Fixed rounding issue for thermostats in auto mode<br>
+***v0.2.17*** Added support for colorTemperature bulbs<br>
 # Explanation:
 
 ### Direct Updates
