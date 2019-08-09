@@ -612,7 +612,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                         })
                         .on('set', function(value, callback) {
                             platform.api.runCommand(device.deviceid, 'setColorTemperature', {
-                                value1: round(mired.miredToKelvin(value))
+                                value1: Math.round(mired.miredToKelvin(value))
                             }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         });
         platform.addAttributeUsage('colorTemperature', device.deviceid, thisCharacteristic);
