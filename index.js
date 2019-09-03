@@ -655,10 +655,10 @@ HE_ST_Platform.prototype = {
         if (myUsage instanceof Array) {
             for (var j = 0; j < myUsage.length; j++) {
                 var accessory = that.deviceLookup[uuidGen(attributeSet.device)];
-	            if (accessory) {
-	                accessory.device.attributes[attributeSet.attribute] = attributeSet.value;
-	                myUsage[j].getValue();
-	            }
+                if (accessory) {
+                    accessory.device.attributes[attributeSet.attribute] = attributeSet.value;
+                    myUsage[j].getValue();
+                }
             }
         }
     }
