@@ -444,8 +444,8 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                         callback(null, that.device.attributes.thermostatFanMode !== 'auto')
                     })
                     .on('set', function(value, callback) {
-                        platform.api.runCommand(device.deviceid, value ? 'fanOn' : 'fanAuto'
-                        ).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                        platform.api.runCommand(device.deviceid, value ? 'fanOn' : 'fanAuto')
+                            .then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                         that.device.attributes.thermostatFanMode = value ? 'on' : 'auto';
                     });
                 platform.addAttributeUsage('thermostatFanMode', device.deviceid, thisCharacteristic);
