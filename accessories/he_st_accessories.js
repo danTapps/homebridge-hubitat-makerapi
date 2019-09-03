@@ -1090,6 +1090,23 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             });
         platform.addAttributeUsage('valve', device.deviceid, thisCharacteristic);
     }
+    // No handlers added here since they are ignored for StatelessProgrammableSwitch.
+    // See index.js: HE_ST_Platform.processFieldUpdate().
+    if (that.device.attributes.hasOwnProperty('pushed')) {
+        that.deviceGroup = "button";
+        thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
+        platform.addAttributeUsage('pushed', device.deviceid, thisCharacteristic);
+    }
+    if (that.device.attributes.hasOwnProperty('doubleTapped')) {
+        that.deviceGroup = "button";
+        thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
+        platform.addAttributeUsage('doubleTapped', device.deviceid, thisCharacteristic);
+    }
+    if (that.device.attributes.hasOwnProperty('held')) {
+        that.deviceGroup = "button";
+        thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
+        platform.addAttributeUsage('held', device.deviceid, thisCharacteristic);
+    }
 /*
     if (device && device.capabilities) {
         if ((device.capabilities['Switch Level'] !== undefined || device.capabilities['SwitchLevel'] !== undefined) && !isSpeaker && !isFan && !isMode && !isRoutine && !isWindowShade) {
