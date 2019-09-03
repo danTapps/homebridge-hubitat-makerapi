@@ -657,7 +657,14 @@ HE_ST_Platform.prototype = {
                 var accessory = that.deviceLookup[uuidGen(attributeSet.device)];
                 if (accessory) {
                     accessory.device.attributes[attributeSet.attribute] = attributeSet.value;
-                    myUsage[j].getValue();
+                    if (attributeSet.attribute === 'pushed')
+                        myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.SINGLE_PRESS);
+                    else if (attributeSet.attribute === 'doubleTapped')
+                       myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.DOUBLE_PRESS);
+                    else if (attributeSet.attribute === 'held')
+                       myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.LONG_PRESS);
+                    else
+                       myUsage[j].getValue();
                 }
             }
         }
