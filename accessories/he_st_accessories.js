@@ -1092,6 +1092,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     }
     // No handlers added here since they are ignored for StatelessProgrammableSwitch.
     // See index.js: HE_ST_Platform.processFieldUpdate().
+/* CHECK BUTTON IMPLEMENTATION
     if (that.device.attributes.hasOwnProperty('pushed')) {
         that.deviceGroup = "button";
         thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
@@ -1107,6 +1108,8 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
         platform.addAttributeUsage('held', device.deviceid, thisCharacteristic);
     }
+*/
+
 /*
     if (device && device.capabilities) {
         if ((device.capabilities['Switch Level'] !== undefined || device.capabilities['SwitchLevel'] !== undefined) && !isSpeaker && !isFan && !isMode && !isRoutine && !isWindowShade) {
