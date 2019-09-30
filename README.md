@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.2.18```**
+**```Current App version: 0.2.19```**
 
 <br>
 
@@ -33,6 +33,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.2.16*** Fixed rounding issue for thermostats in auto mode<br>
 ***v0.2.17*** Added support for colorTemperature bulbs<br>
 ***v0.2.18*** Added thermostat fan switch support (thanks @swiss6th), added ping/pong for websockets (thanks @asj)<br>
+***v0.2.19*** Added some additional testing on websocket status to track down an issue...
 # Explanation:
 
 ### Direct Updates
