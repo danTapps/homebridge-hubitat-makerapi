@@ -438,7 +438,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     that.device.attributes.coolingSetpoint = temp;
                 });
             platform.addAttributeUsage('coolingSetpoint', device.deviceid, thisCharacteristic);
-            if (that.device.commands.hasOwnProperty('fanOn') && that.device.commands.hasOwnProperty('fanAuto')) {
+            if ((platform.swiss_flag === true) && (that.device.commands.hasOwnProperty('fanOn') && that.device.commands.hasOwnProperty('fanAuto'))) {
                 thisCharacteristic = that.getaddService(Service.Fan).getCharacteristic(Characteristic.On)
                     .on('get', function(callback) {
                         callback(null, that.device.attributes.thermostatFanMode !== 'auto')
@@ -1092,23 +1092,21 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     }
     // No handlers added here since they are ignored for StatelessProgrammableSwitch.
     // See index.js: HE_ST_Platform.processFieldUpdate().
-/* CHECK BUTTON IMPLEMENTATION
-    if (that.device.attributes.hasOwnProperty('pushed')) {
+    if ((platform.swiss_flag === true) && (that.device.attributes.hasOwnProperty('pushed'))) {
         that.deviceGroup = "button";
         thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
         platform.addAttributeUsage('pushed', device.deviceid, thisCharacteristic);
     }
-    if (that.device.attributes.hasOwnProperty('doubleTapped')) {
+    if ((platform.swiss_flag === true) && (that.device.attributes.hasOwnProperty('doubleTapped'))) {
         that.deviceGroup = "button";
         thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
         platform.addAttributeUsage('doubleTapped', device.deviceid, thisCharacteristic);
     }
-    if (that.device.attributes.hasOwnProperty('held')) {
+    if ((platform.swiss_flag === true) && (that.device.attributes.hasOwnProperty('held'))) {
         that.deviceGroup = "button";
         thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
         platform.addAttributeUsage('held', device.deviceid, thisCharacteristic);
     }
-*/
 
 /*
     if (device && device.capabilities) {
