@@ -90,7 +90,8 @@ function HE_ST_Platform(log, config, api) {
     this.enable_hsm = config['hsm'] || false;
     this.mode_switches =  config['mode_switches'] || false;
     this.add_reboot_switch = config['add_reboot_switch'] || false;
-
+    this.communication_test_device = config['communication_test_device'] || null;
+    this.swiss_flag = config['swiss6th'] || false;
     // This is how often it polls for subscription data.
     this.api = he_st_api;
     this.deviceLookup = {};
@@ -657,15 +658,18 @@ HE_ST_Platform.prototype = {
                 var accessory = that.deviceLookup[uuidGen(attributeSet.device)];
                 if (accessory) {
                     accessory.device.attributes[attributeSet.attribute] = attributeSet.value;
-/* CHECK BUTTOM IMPLEMENTATION
-                    if (attributeSet.attribute === 'pushed')
-                        myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.SINGLE_PRESS);
-                    else if (attributeSet.attribute === 'doubleTapped')
-                        myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.DOUBLE_PRESS);
-                    else if (attributeSet.attribute === 'held')
-                        myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.LONG_PRESS);
+                    if (platform.swiss_flag === true)
+                    {
+                        if (attributeSet.attribute === 'pushed')
+                            myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.SINGLE_PRESS);
+                        else if (attributeSet.attribute === 'doubleTapped')
+                            myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.DOUBLE_PRESS);
+                        else if (attributeSet.attribute === 'held')
+                            myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.LONG_PRESS);
+                        else
+                            myUsage[j].getValue();
+                    }
                     else
-*/
                         myUsage[j].getValue();
                 }
             }
