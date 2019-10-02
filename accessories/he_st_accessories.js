@@ -438,7 +438,9 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     that.device.attributes.coolingSetpoint = temp;
                 });
             platform.addAttributeUsage('coolingSetpoint', device.deviceid, thisCharacteristic);
-            if ((platform.swiss_flag === true) && (that.device.commands.hasOwnProperty('fanOn') && that.device.commands.hasOwnProperty('fanAuto'))) {
+            if (that.device.attributes.hasOwnProperty('thermostatFanMode') && 
+                that.device.commands.hasOwnProperty('fanOn') && 
+                that.device.commands.hasOwnProperty('fanAuto')) {
                 thisCharacteristic = that.getaddService(Service.Fan).getCharacteristic(Characteristic.On)
                     .on('get', function(callback) {
                         callback(null, that.device.attributes.thermostatFanMode !== 'auto')
