@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.3.0```**
+**```Current App version: 0.3.1```**
 
 <br>
 
@@ -35,6 +35,8 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.2.18*** Added thermostat fan switch support (thanks @swiss6th), added ping/pong for websockets (thanks @asj)<br>
 ***v0.2.19*** Added some additional testing on websocket status to track down an issue...<br>
 ***v0.3.0*** Added Button support, limited to "push" for 1 button, see ***"programmable_buttons"*** for advanced programmable button support (thanks to @swiss6th for the code base)<br>
+***v0.3.1*** fixed double usage of switch if a button also has the switch attribute<br>
+
 # Explanation:
 
 ### Direct Updates
