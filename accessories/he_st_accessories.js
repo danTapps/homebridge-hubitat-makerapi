@@ -58,6 +58,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     this.state = {};
     this.device = device;
     this.unregister = false;
+    this.programmableButton = device.programmableButton;
     var id = uuidGen(this.deviceid);
     //Accessory.call(this, this.name, id);
       
@@ -122,8 +123,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         var _device = device.deviceid;
         device.deviceid = 'filter'+_device.deviceid;
         var newAccessory = new HE_ST_Accessory(platform, group, device);
-        //console.log('accessory', that.accessory.services);
-        //console.log('newAccessory', newAccessory.accessory.services);
+        console.log('BEFORE ', device.name );
+        console.log('accessory', that.accessory.services);
+        console.log('BEFORE ', device.name );
+        console.log('newAccessory', newAccessory.accessory.services);
 
         for (var k in that.accessory.services) {
             for (var l in that.accessory.services[k].optionalCharacteristics) {
@@ -157,8 +160,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             if (removeService === true)
                 that.accessory.removeService(that.accessory.services[k]);
         }
-        //console.log('accessory', that.accessory.services);
-        //console.log('newAccessory', newAccessory.accessory.services);
+        console.log('AFTER ', device.name );
+        console.log('accessory', that.accessory.services);
+        console.log('AFTER ', device.name );
+        console.log('newAccessory', newAccessory.accessory.services);
         device.deviceid = _device;
         return;
     }
@@ -1094,22 +1099,40 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     }
     // No handlers added here since they are ignored for StatelessProgrammableSwitch.
     // See index.js: HE_ST_Platform.processFieldUpdate().
-    if ((platform.swiss_flag === true) && (that.device.attributes.hasOwnProperty('pushed'))) {
+    if (that.device.attributes.hasOwnProperty('pushed')) {
         that.deviceGroup = "button";
-        thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
-        platform.addAttributeUsage('pushed', device.deviceid, thisCharacteristic);
+        if (that.programmableButton === true) {
+            hisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
+            platform.addAttributeUsage('pushed', device.deviceid, thisCharacteristic);
+            if (that.device.attributes.hasOwnProperty('doubleTapped')) {
+                thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
+                platform.addAttributeUsage('doubleTapped', device.deviceid, thisCharacteristic);
+            }
+            if (that.device.attributes.hasOwnProperty('held')) {
+                thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
+                platform.addAttributeUsage('held', device.deviceid, thisCharacteristic);
+            }
+        } else {
+            thisCharacteristic = that.getaddService(Service.Switch).getCharacteristic(Characteristic.On)
+            .on('get', function(callback) {
+                callback(null, false);
+            })
+            .on('set', function(value, callback) {
+                if (value) {
+                        platform.api.runCommand(device.deviceid, "push", {
+                        value1: "1" 
+                    }).then(function(resp) {if (callback) callback(null, false); setTimeout(
+                            function() {
+                                that.getaddService(Service.Switch).setCharacteristic(Characteristic.On, false);
+                            }, 1000);
+                    }).catch(function(err) { if (callback) callback(err); });
+                } else {
+                    if (callback) callback(null, value);
+                }
+            });
+            platform.addAttributeUsage('pushed', device.deviceid, thisCharacteristic);
+        }
     }
-    if ((platform.swiss_flag === true) && (that.device.attributes.hasOwnProperty('doubleTapped'))) {
-        that.deviceGroup = "button";
-        thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
-        platform.addAttributeUsage('doubleTapped', device.deviceid, thisCharacteristic);
-    }
-    if ((platform.swiss_flag === true) && (that.device.attributes.hasOwnProperty('held'))) {
-        that.deviceGroup = "button";
-        thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
-        platform.addAttributeUsage('held', device.deviceid, thisCharacteristic);
-    }
-
 /*
     if (device && device.capabilities) {
         if ((device.capabilities['Switch Level'] !== undefined || device.capabilities['SwitchLevel'] !== undefined) && !isSpeaker && !isFan && !isMode && !isRoutine && !isWindowShade) {
