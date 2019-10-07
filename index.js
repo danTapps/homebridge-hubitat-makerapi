@@ -80,6 +80,7 @@ function HE_ST_Platform(log, config, api) {
     this.access_token = config['access_token'];
     this.excludedAttributes = config["excluded_attributes"] || [];
     this.excludedCapabilities = config["excluded_capabilities"] || [];
+    this.programmable_buttons = config["programmable_buttons"] || [];
     // This is how often it does a full refresh
     this.polling_seconds = config['polling_seconds'];
     // Get a full refresh every hour.
@@ -91,7 +92,6 @@ function HE_ST_Platform(log, config, api) {
     this.mode_switches =  config['mode_switches'] || false;
     this.add_reboot_switch = config['add_reboot_switch'] || false;
     this.communication_test_device = config['communication_test_device'] || null;
-    this.swiss_flag = config['swiss6th'] || false;
     // This is how often it polls for subscription data.
     this.api = he_st_api;
     this.deviceLookup = {};
@@ -149,6 +149,7 @@ HE_ST_Platform.prototype = {
                             var fromCache = ((inAccessory !== undefined) && (inAccessory !== null))
                             data.excludedAttributes = that.excludedAttributes[deviceid] || ["None"];
                             data.excludedCapabilities = that.excludedCapabilities[deviceid] || ["None"];
+                            data.programmableButton = that.isProgrammableButton(deviceid);
                             accessory = new HE_ST_Accessory(that, group, data, inAccessory);
                             // that.log(accessory);
                             if (accessory !== undefined) {
@@ -188,6 +189,7 @@ HE_ST_Platform.prototype = {
                 }
                 else {
                     var fromCache = ((inAccessory !== undefined) && (inAccessory !== null))
+                    inDevice.programmableButton = that.isProgrammableButton(deviceid);
                     accessory = new HE_ST_Accessory(that, group, inDevice, inAccessory);   
                     if (accessory !== undefined) {
                         if (accessory.accessory.services.length <= 1 || accessory.deviceGroup === 'unknown') {
@@ -360,7 +362,7 @@ HE_ST_Platform.prototype = {
                         mode.commands = {};
                         mode.excludedAttributes = ["None"];
                         mode.excludedCapabilities = ["None"];
-                        myList.push( {id: mode.deviceid, name: mode.label, label: mode.label, type: 'mode', data: mode});
+                        myList.push( {id: mode.deviceid, name: mode.label, label: mode.label, type: 'mode', data: mode} );
                     }
                     return myList;
                 });
@@ -648,6 +650,12 @@ HE_ST_Platform.prototype = {
             }
         }
     },
+    isProgrammableButton: function(deviceId) {
+        var that = this;
+        if (that.programmable_buttons.includes(deviceId))
+            return true
+        return false;
+    },
     processFieldUpdate: function(attributeSet, that) {
         if (!(that.attributeLookup[attributeSet.attribute] && that.attributeLookup[attributeSet.attribute][attributeSet.device])) {
             return;
@@ -658,17 +666,12 @@ HE_ST_Platform.prototype = {
                 var accessory = that.deviceLookup[uuidGen(attributeSet.device)];
                 if (accessory) {
                     accessory.device.attributes[attributeSet.attribute] = attributeSet.value;
-                    if (platform.swiss_flag === true)
-                    {
-                        if (attributeSet.attribute === 'pushed')
-                            myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.SINGLE_PRESS);
-                        else if (attributeSet.attribute === 'doubleTapped')
-                            myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.DOUBLE_PRESS);
-                        else if (attributeSet.attribute === 'held')
-                            myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.LONG_PRESS);
-                        else
-                            myUsage[j].getValue();
-                    }
+                    if ((attributeSet.attribute === 'pushed') && platform.isProgrammableButton(attributeSet.device))
+                        myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.SINGLE_PRESS);
+                    else if ((attributeSet.attribute === 'doubleTapped') && platform.isProgrammableButton(attributeSet.device))
+                        myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.DOUBLE_PRESS);
+                    else if ((attributeSet.attribute === 'held') && platform.isProgrammableButton(attributeSet.device))
+                        myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.LONG_PRESS);
                     else
                         myUsage[j].getValue();
                 }
