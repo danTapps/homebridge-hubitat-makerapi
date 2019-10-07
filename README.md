@@ -33,8 +33,8 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.2.16*** Fixed rounding issue for thermostats in auto mode<br>
 ***v0.2.17*** Added support for colorTemperature bulbs<br>
 ***v0.2.18*** Added thermostat fan switch support (thanks @swiss6th), added ping/pong for websockets (thanks @asj)<br>
-***v0.2.19*** Added some additional testing on websocket status to track down an issue...
-***v0.3.0*** Added Button support, limited to "push" for 1 button, see "programmable_buttons" for advances programmable button support
+***v0.2.19*** Added some additional testing on websocket status to track down an issue...<br>
+***v0.3.0*** Added Button support, limited to "push" for 1 button, see ***"programmable_buttons"*** for advanced programmable button support (thanks to @swiss6th for the code base)<br>
 # Explanation:
 
 ### Direct Updates
@@ -130,7 +130,7 @@ When properly setup, you should see something like this in your Homebridge start
    Defaults to None<br>Specify the Hubitat device by ID and the associated attributes you want homebridge-hubitat-makerapi to ignore. This prevents a Hubitat device from creating unwanted or redundant HomeKit accessories</small></p>
 
 * <p><u>programmable_buttons</u>  <small style="color: #f92672; font-weight: 600;"><i>Optional</i></small><br>
-   Defaults to None<br>By default, pressing Buttons in Homekit trigger a "pushed" event for button number 1 in Hubitat. The setting "programmable_buttons" allows to HE to trigger HomeKit specific scenes. You can assign scenes to three types of events: Pushed, Held and DoubleTapped. This can be helpful to interact with Homekit only devices. E.g. a button press in HE can trigger a HomeKit only lock to lock. Note: there is no feedback if the Homekit scene was executed successfully or not. Specify the Hubitat device by ID to create a programmable button.</small></p>
+   Defaults to None<br>By default, pressing Buttons in Homekit trigger a "pushed" event for button number 1 in Hubitat. The setting "programmable_buttons" allows Hubitat to trigger HomeKit specific scenes. You can assign scenes to three types of events: Pushed, Held and DoubleTapped. This can be helpful to interact with Homekit only devices. E.g. a button press in HE can trigger a HomeKit only lock to lock. Note: there is no feedback if the Homekit scene was executed successfully or not. Specify the Hubitat device by ID in this setting to create a programmable button.</small></p>
 
  * <p><u>temperature_unit</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
     Default to F<br>Ability to configure between Celsius and Fahrenheit. Possible values: "F" or "C"</small></p>
