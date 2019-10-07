@@ -1113,24 +1113,26 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 platform.addAttributeUsage('held', device.deviceid, thisCharacteristic);
             }
         } else {
-            thisCharacteristic = that.getaddService(Service.Switch).getCharacteristic(Characteristic.On)
-            .on('get', function(callback) {
-                callback(null, false);
-            })
-            .on('set', function(value, callback) {
-                if (value) {
-                        platform.api.runCommand(device.deviceid, "push", {
-                        value1: "1" 
-                    }).then(function(resp) {if (callback) callback(null, false); setTimeout(
-                            function() {
-                                that.getaddService(Service.Switch).setCharacteristic(Characteristic.On, false);
-                            }, 1000);
-                    }).catch(function(err) { if (callback) callback(err); });
-                } else {
-                    if (callback) callback(null, value);
-                }
-            });
-            platform.addAttributeUsage('pushed', device.deviceid, thisCharacteristic);
+            if (!platform.isAttributeUsed('switch', device.deviceid)) {
+                thisCharacteristic = that.getaddService(Service.Switch).getCharacteristic(Characteristic.On)
+                .on('get', function(callback) {
+                    callback(null, false);
+                })
+                .on('set', function(value, callback) {
+                    if (value) {
+                            platform.api.runCommand(device.deviceid, "push", {
+                            value1: "1" 
+                        }).then(function(resp) {if (callback) callback(null, false); setTimeout(
+                                function() {
+                                    that.getaddService(Service.Switch).setCharacteristic(Characteristic.On, false);
+                                }, 1000);
+                        }).catch(function(err) { if (callback) callback(err); });
+                    } else {
+                        if (callback) callback(null, value);
+                    }
+                });
+                platform.addAttributeUsage('pushed', device.deviceid, thisCharacteristic);
+            }
         }
     }
 /*
