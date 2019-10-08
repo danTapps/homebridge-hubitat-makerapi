@@ -123,10 +123,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
         var _device = device.deviceid;
         device.deviceid = 'filter'+_device.deviceid;
         var newAccessory = new HE_ST_Accessory(platform, group, device);
-        console.log('BEFORE ', device.name );
-        console.log('accessory', that.accessory.services);
-        console.log('BEFORE ', device.name );
-        console.log('newAccessory', newAccessory.accessory.services);
+        //console.log('BEFORE ', device.name );
+        //console.log('accessory', that.accessory.services);
+        //console.log('BEFORE ', device.name );
+        //console.log('newAccessory', newAccessory.accessory.services);
 
         for (var k in that.accessory.services) {
             for (var l in that.accessory.services[k].optionalCharacteristics) {
@@ -160,10 +160,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             if (removeService === true)
                 that.accessory.removeService(that.accessory.services[k]);
         }
-        console.log('AFTER ', device.name );
-        console.log('accessory', that.accessory.services);
-        console.log('AFTER ', device.name );
-        console.log('newAccessory', newAccessory.accessory.services);
+        //console.log('AFTER ', device.name );
+        //console.log('accessory', that.accessory.services);
+        //console.log('AFTER ', device.name );
+        //console.log('newAccessory', newAccessory.accessory.services);
         device.deviceid = _device;
         return;
     }
