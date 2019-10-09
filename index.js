@@ -98,6 +98,8 @@ function HE_ST_Platform(log, config, api) {
     this.firstpoll = true;
     this.attributeLookup = {};
     this.hb_api = api;
+    this.communication_broken = true;
+    this.communication_reload_running = false;
     this.version_speak_device = this.config['version_speak_device'];
     this.versionCheck = require('./lib/npm_version_check')(pluginName,npm_version,this.log,null);
     this.doVersionCheck();
@@ -128,6 +130,29 @@ HE_ST_Platform.prototype = {
             }).catch(function(resp){
             });
         }
+    },
+    setCommunicationBroken: function (newValue = true)
+    {
+        var that = this;
+        return new Promise(function(resolve, reject) {
+            if (that.communication_broken !== newValue) {
+                if (newValue) {
+                    that.log.error('Set communcation_broken to ' + newValue);
+                    that.communication_broken = newValue; resolve('');
+                }
+                else {
+                    if (that.communication_reload_running != true) {
+                        that.communication_reload_running = true;
+                        that.log.good('Set communcation_broken to ' + newValue);
+                        that.reloadData(function() { 
+                            that.communication_broken = newValue; 
+                            that.communication_reload_running = false;
+                            resolve(''); 
+                        });
+                    }
+                }
+            }
+        });
     },
     addUpdateAccessory: function(deviceid, group, inAccessory = null, inDevice = null)
     {
@@ -267,21 +292,25 @@ HE_ST_Platform.prototype = {
         var that = this;
         return new Promise(function(resolve, reject) {
             var accessories = [];
-            Object.keys(that.deviceLookup).forEach(function(key) {
-            if (!(that.deviceLookup[key] instanceof HE_ST_Accessory))
-                that.removeAccessory(that.deviceLookup[key]).catch(function(error) {});
-            });
-            Object.keys(that.deviceLookup).forEach(function(key) {
-                if (that.deviceLookup[key].deviceGroup === 'reboot')
-                    return;
-                var unregister = true;
-                for (var i = 0; i < devices.length; i++) {
-                    if (that.deviceLookup[key].accessory.UUID === uuidGen(devices[i].id))
-                        unregister = false;
+            for (var key in that.deviceLookup) {
+                if (that.deviceLookup.hasOwnProperty(key)) {
+                    if (!(that.deviceLookup[key] instanceof HE_ST_Accessory))
+                        that.removeAccessory(that.deviceLookup[key]).catch(function(error) {});
                 }
-                if (unregister)
-                    that.removeAccessory(that.deviceLookup[key]).catch(function(error) {});
-            });
+            }
+            for (var key in that.deviceLookup) {
+                if (that.deviceLookup.hasOwnProperty(key)) {
+                    if (that.deviceLookup[key].deviceGroup === 'reboot')
+                        return;
+                    var unregister = true;
+                    for (var i = 0; i < devices.length; i++) {
+                        if (that.deviceLookup[key].accessory.UUID === uuidGen(devices[i].id))
+                            unregister = false;
+                    }
+                    if (unregister)
+                        that.removeAccessory(that.deviceLookup[key]).catch(function(error) {});
+                }
+            }
             resolve(devices);
         });
     },
@@ -305,15 +334,41 @@ HE_ST_Platform.prototype = {
             resolve(devices);
         });
     },
-    updateDevices: function() {
+    updateDevices: function(devices) {
         var that = this;
         return new Promise(function(resolve, reject) {
-            if (!that.firstpoll) {
+            if ((that.communication_broken) && (!that.firstpoll)) {
+                that.log('Updating states with broken communication');
+                for (var i = 0; i < devices.length; i++) {
+                    if (devices[i].type !== undefined) {
+                        if (that.deviceLookup[uuidGen(devices[i].data.deviceid)] instanceof HE_ST_Accessory)
+                        {
+                            var accessory = that.deviceLookup[uuidGen(devices[i].data.deviceid)];
+                            accessory.updateAttributes(devices[i].data, that);
+                        }
+                    } else {
+                        he_st_api.getDeviceInfo(devices[i].id)
+                            .then(function(data) {
+                                if (that.deviceLookup[uuidGen(data.deviceid)] instanceof HE_ST_Accessory)
+                                {
+                                    var accessory = that.deviceLookup[uuidGen(data.deviceid)];
+                                    accessory.updateAttributes(data, that);
+                                    //accessory.loadData(devices[i]);
+                                }    
+                            }).catch(function(error) {
+                                that.log.error(error);
+                            });
+                    }
+                }   
+            }
+            if(!that.firstpoll) { 
                 var updateAccessories = [];
-                Object.keys(that.deviceLookup).forEach(function(key) {
-                    if (that.deviceLookup[key] instanceof HE_ST_Accessory)
-                        updateAccessories.push(that.deviceLookup[key].accessory);
-                });
+                for (var key in that.deviceLookup) {
+                    if (that.deviceLookup.hasOwnProperty(key)) {
+                        if (that.deviceLookup[key] instanceof HE_ST_Accessory)
+                            updateAccessories.push(that.deviceLookup[key].accessory);
+                    }
+                }
                 if (updateAccessories.length)
                     that.hb_api.updatePlatformAccessories(updateAccessories);
             }
@@ -401,7 +456,7 @@ HE_ST_Platform.prototype = {
         }).then(function(myList) {
             return that.populateDevices(myList);
         }).then(function(myList) {
-            return that.updateDevices();
+            return that.updateDevices(myList);
         }).then(function(myList) {
             if (callback)
                 callback(foundAccessories);
@@ -431,6 +486,8 @@ HE_ST_Platform.prototype = {
                 that.log.error('Received an error trying to get the device summary information from Hubitat.', error);
             }
             that.log.error('I am stopping my reload here and hope eveything fixes themselves (e.g. a firmware update of HE is rebooting the hub');
+            if (callback)
+                callback(null);
         });
     },
     configureAccessory: function (accessory) {
@@ -630,11 +687,12 @@ HE_ST_Platform.prototype = {
     },
     removeDeviceAttributeUsage: function(deviceid) {
         var that = this;
-        Object.entries(that.attributeLookup).forEach((entry) => {
-            const [key, value] = entry;
-            if (that.attributeLookup[key].hasOwnProperty(deviceid))
-                delete that.attributeLookup[key][deviceid];
-        });
+        for (var key in that.attributeLookup) {
+            if (that.attributeLookup.hasOwnProperty(key)) {
+                if (that.attributeLookup[key].hasOwnProperty(deviceid))
+                    delete that.attributeLookup[key][deviceid];
+            }
+        }
     },
     getAttributeValue: function(attribute, deviceid, that) {
         if (!(that.attributeLookup[attribute] && that.attributeLookup[attribute][deviceid])) {
