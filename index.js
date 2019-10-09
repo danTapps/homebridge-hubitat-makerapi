@@ -710,8 +710,8 @@ HE_ST_Platform.prototype = {
     },
     isProgrammableButton: function(deviceId) {
         var that = this;
-        if (that.programmable_buttons.includes(deviceId))
-            return true
+        if (that.programmable_buttons.includes(String(deviceId)))
+            return true;
         return false;
     },
     processFieldUpdate: function(attributeSet, that) {
