@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.3.2```**
+**```Current App version: 0.3.3```**
 
 <br>
 
@@ -37,7 +37,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.3.0*** Added Button support, limited to "push" for 1 button, see ***"programmable_buttons"*** for advanced programmable button support (thanks to @swiss6th for the code base)<br>
 ***v0.3.1*** fixed double usage of switch if a button also has the switch attribute<br>
 ***v0.3.2*** Another try to deal with websocket issues<br>
-
+***v0.3.3*** Fixed programmed buttons implementation, further testing on websocket connection, reloading of attribute states via HTTP if websocket connection is "broken", some refactoring<br>
 # Explanation:
 
 ### Direct Updates
