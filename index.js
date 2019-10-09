@@ -338,7 +338,7 @@ HE_ST_Platform.prototype = {
         var that = this;
         return new Promise(function(resolve, reject) {
             if ((that.communication_broken) && (!that.firstpoll)) {
-                that.log('Updating states with broken communication');
+                that.log('Updating attrbutes via HTTP');
                 for (var i = 0; i < devices.length; i++) {
                     if (devices[i].type !== undefined) {
                         if (that.deviceLookup[uuidGen(devices[i].data.deviceid)] instanceof HE_ST_Accessory)
