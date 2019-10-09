@@ -20,6 +20,7 @@ module.exports = function(oAccessory, oService, oCharacteristic, oPlatformAccess
 //        inherits(HE_ST_Accessory, Accessory);
         HE_ST_Accessory.prototype.loadData = loadData;
         HE_ST_Accessory.prototype.getServices = getServices;
+        HE_ST_Accessory.prototype.updateAttributes = updateAttributes;
     }
     return HE_ST_Accessory;
 };
@@ -102,18 +103,20 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     for (var i = 0; i < that.device.excludedCapabilities.length; i++) {
         let excludedCapability = device.excludedCapabilities[i].toLowerCase();
         if (that.device.capabilities.hasOwnProperty(excludedCapability)) {
-            Object.keys(capabilityToAttributeMap).forEach(function(key) {
-                if (key === excludedCapability) {
-                    platform.log("Removing capability: " + excludedCapability + " for device: " + device.name); 
-                    for (var k = 0; k < capabilityToAttributeMap[key].length; k++)
-                    {
-                        var excludedAttribute = capabilityToAttributeMap[key][k];
-                        if (that.device.attributes.hasOwnProperty(excludedAttribute)) {
-                            delete that.device.attributes[excludedAttribute];
+            for (var key in capabilityToAttributeMap) {
+                if (capabilityToAttributeMap.hasOwnProperty(key)) {
+                    if (key === excludedCapability) {
+                        platform.log("Removing capability: " + excludedCapability + " for device: " + device.name); 
+                        for (var k = 0; k < capabilityToAttributeMap[key].length; k++)
+                        {
+                            var excludedAttribute = capabilityToAttributeMap[key][k];
+                            if (that.device.attributes.hasOwnProperty(excludedAttribute)) {
+                                delete that.device.attributes[excludedAttribute];
+                            }
                         }
-                    }
-                }   
-            });
+                    } 
+                }
+            }
         }
     }
 
@@ -1457,6 +1460,26 @@ function convertAlarmState(value, valInt = false) {
         case 'alarm_active':
         case 4:
             return valInt ? Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED : 'alarm_active';
+    }
+}
+
+function updateAttributes(data, platform, myObject) {
+    var that = this;
+    //platform.log('updateAttributes', data, that);
+    for (var key in that.device.attributes) {
+        if (that.device.attributes.hasOwnProperty(key)) {
+            if (data.attributes.hasOwnProperty(key)) {
+                //platform.log('Key ' + key + ' ' + that.device.attributes[key]);
+                that.device.attributes[key] = data.attributes[key];
+            }
+        }
+        
+    }
+    //that.device.attributes = data.attributes;
+    for (var i = 0; i < that.accessory.services.length; i++) {
+        for (var j = 0; j < that.accessory.services[i].characteristics.length; j++) {
+            that.accessory.services[i].characteristics[j].getValue();
+        }
     }
 }
 
