@@ -1105,7 +1105,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     if (that.device.attributes.hasOwnProperty('pushed')) {
         that.deviceGroup = "button";
         if (that.programmableButton === true) {
-            hisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
+            thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
             platform.addAttributeUsage('pushed', device.deviceid, thisCharacteristic);
             if (that.device.attributes.hasOwnProperty('doubleTapped')) {
                 thisCharacteristic = that.getaddService(Service.StatelessProgrammableSwitch).getCharacteristic(Characteristic.ProgrammableSwitchEvent);
