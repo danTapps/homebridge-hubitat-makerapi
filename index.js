@@ -67,7 +67,7 @@ function HE_ST_Platform(log, config, api) {
     this.hubconnect_key = config['hubconnect_key'];
     this.local_port = config['local_port'];
     if (this.local_port === undefined || this.local_port === '') {
-        this.local_port = 20009;
+        this.local_port = 20010;
     }
 
     this.local_ip = config['local_ip'];
