@@ -461,6 +461,7 @@ HE_ST_Platform.prototype = {
             if (callback)
                 callback(foundAccessories);
             that.firstpoll = false;
+            that.setCommunicationBroken(false).then(function() {}).catch(function(){});
         }).catch(function(error) {
             if (error.hasOwnProperty('statusCode'))
             {
@@ -486,7 +487,7 @@ HE_ST_Platform.prototype = {
                 that.log.error('Received an error trying to get the device summary information from Hubitat.', error);
             }
             that.log.error('I am stopping my reload here and hope eveything fixes themselves (e.g. a firmware update of HE is rebooting the hub');
-            that.setCommunicationBroken(false).then(function() {}).catch(function(){});
+            that.setCommunicationBroken(true).then(function() {}).catch(function(){});
             if (callback)
                 callback(null);
         });
