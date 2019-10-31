@@ -38,7 +38,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.3.1*** fixed double usage of switch if a button also has the switch attribute<br>
 ***v0.3.2*** Another try to deal with websocket issues<br>
 ***v0.3.3*** Fixed programmed buttons implementation, further testing on websocket connection, reloading of attribute states via HTTP if websocket connection is "broken", some refactoring<br>
-***v0.4.0*** Adapted to new MakerAPI event-stream released with Hubitat release 2.1.6, websocket connection is used as fallback if MakerAPI stream is not supported, new configuration options for "local_ip" and "local_port" added<br>
+***v0.4.0*** Adapted to new MakerAPI event-stream released with Hubitat release 2.1.6, websocket connection is used as fallback if MakerAPI stream is not supported, new configuration options for "local_ip" and "local_port" added, clean reload after lost communication with hub<br>
 # Explanation:
 
 ### Direct Updates
