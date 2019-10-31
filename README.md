@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.3.3```**
+**```Current App version: 0.4.0```**
 
 <br>
 
@@ -19,7 +19,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.1.9*** - Added ability to filter out attributes and capabilities<br>
 ***v0.1.10*** - Fixed Hampton Bay Fan Component<br>
 ***v0.1.11 - v0.1.17*** - Several attempts to mess with messy fans...<br>
-***v0.2.0*** - migrated to dynamic homebridge platform that removes the need of restarting homebridge after a device selection was changed in MakerAPI, configure homebridge to use Celsius, fixed fan tile on/off functionallity, ability to create switch tiles for modes and switching of modes, HSM integration, reduced load on Hubitat at plugin start by removing dependency on full detail API call, plugin startup speed improved, perform daily version check against NPMJS and print logging statement on newer versions available, 
+***v0.2.0*** - migrated to dynamic homebridge platform that removes the need of restarting homebridge after a device selection was changed in MakerAPI, configure homebridge to use Celsius, fixed fan tile on/off functionallity, ability to create switch tiles for modes and switching of modes, HSM integration, reduced load on Hubitat at plugin start by removing dependency on full detail API call, plugin startup speed improved, perform daily version check against NPMJS and print logging statement on newer versions available<br>
 ***v0.2.1 - v0.2.4*** - Fixed attribute filtering for cached devices <br>
 ***v0.2.5*** allows correct usage of DNS host names instead of IP address to connect to hubitat, fans that support setLevel use setLevel instead of setSpeed to allow finer granularity, code baselined with homebridge-hubitat-hubconnect plugin to allow faster cross-sharing of improvements<br>
 ***v0.2.6*** Fixed issue with multi sensors not updating temperature and humidity, fixed issue that temperature can't go negative<br>
@@ -38,6 +38,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.3.1*** fixed double usage of switch if a button also has the switch attribute<br>
 ***v0.3.2*** Another try to deal with websocket issues<br>
 ***v0.3.3*** Fixed programmed buttons implementation, further testing on websocket connection, reloading of attribute states via HTTP if websocket connection is "broken", some refactoring<br>
+***v0.4.0*** Adapted to new MakerAPI event-stream released with Hubitat release 2.1.6, websocket connection is used as fallback if MakerAPI stream is not supported, new configuration options for "local_ip" and "local_port" added<br>
 # Explanation:
 
 ### Direct Updates
@@ -45,7 +46,7 @@ This method is nearly instant.
 
 When properly setup, you should see something like this in your Homebridge startup immediately after the PIN:
 ```
-[2019-4-12 14:22:51] [Hubitat] connect to ws://192.168.10.169/eventsocket
+[2019-4-12 14:22:51] [Hubitat] homebridge-hubitat-makerapi server listening on 20009
 [2019-4-12 14:22:51] Homebridge is running on port 51826.
 ```
 
@@ -62,6 +63,7 @@ When properly setup, you should see something like this in your Homebridge start
 * Tap <u><b>```Done```</b></u> and you are finished with the App configuration.
 * Go into the newly added Maker API app
 * Select the devices you would like to have available via HomeKit
+* Enable "Include Location Events" to support HSM and Modes with Homekit
 * At the bottom you see a few examples of access URLs. You will need two parts of this (App URL and Access Token)
     * example: <div style=" overflow:auto;width:auto;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #e6db74">http://192.168.10.169/apps/api/132/devices/[Device ID]?access_token=148fc06d-7627-40b0-8435-8d0cc31617ab</span></div>
         * The App URL is <div style=" overflow:auto;width:auto;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #e6db74">http://192.168.10.169/apps/api/132/</span></div>
@@ -85,6 +87,8 @@ When properly setup, you should see something like this in your Homebridge start
    <span style="color: #f92672">&quot;name&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;Hubitat&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;app_url&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;http://192.168.10.169/apps/api/YOUR_APPS_ID/&quot;</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;access_token&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;THIS-SHOULD-BE-YOUR-TOKEN&quot;</span><span style="color: #f8f8f2">,</span>
+   <span style="color: #f92672">&quot;local_ip&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;10.0.0.70&quot;</span><span style="color: #f8f8f2">,</span>
+   <span style="color: #f92672">&quot;local_port&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #ae81ff">20010</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;polling_seconds&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">300</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;temperature_unit&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">"F"</span><span style="color: #f8f8f2">,</span>
    <span style="color: #f92672">&quot;mode_switches&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">true</span><span style="color: #f8f8f2">,</span>
@@ -122,6 +126,12 @@ When properly setup, you should see something like this in your Homebridge start
 
  * <p><u>app_url</u> & <u>access_token</u>  <small style="color: orange; font-weight: 600;"><i>Required</i></small><br>
     This is the base URL and access token for MakerAPI, check step 1 of the installation instructions on how to obtain the value<b> Notice:</b> The app_url in the example above may be different for you.</small></p>
+
+ * <p><u>local_ip</u>  <small style="color: #f92672; font-weight: 600;"><i>Optional</i></small><br>
+    Defaults to first available IP on your computer<br><small style="color: gray;">Most installations won't need this, but if for any reason it can't identify your ip address correctly, use this setting to force the IP presented to Hubitat for the hub to send to.</small></p>
+
+ * <p><u>local_port</u>  <small style="color: #f92672; font-weight: 600;"><i>Optional</i></small><br>
+   Defaults to 20010<br><small style="color: gray;">This is the port that homebridge-hubitat-makerapi plugin will listen on for events from your hub. Make sure your firewall allows incoming traffic on this port from your hub's IP address.</small></p>
 
  * <p><u>polling_seconds</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
     Configures the how often (in seconds) the plugin should check if devices were removed or added from/to the selection in MakerAPI. Default is every 300 seconds. Almost no need to restart homebridge anymore! Name changes and changing a device driver still requires a restart.</small></p>
@@ -169,7 +179,7 @@ When properly setup, you should see something like this in your Homebridge start
       Maximum size of log file. Default is 10m - Only applicable if logFile -> enable is set to true
 
 ## Capability Filtering
-The **homebridge-hubitat-makerapi** creates Homekit devices based on the attributes of devices. See *** Attribute Filtering *** below.
+The **homebridge-hubitat-makerapi** creates Homekit devices based on the attributes of devices. See ***Attribute Filtering*** below.
 To allow backwards compatibilty to tonesto7's plugin, the homebridge-hubitat-makerapi plugin still allows filtering by capability. Capabilities are going to be matched to Hubitat's listed capabilities at [Driver Capability List](https://docs.hubitat.com/index.php?title=Driver_Capability_List) and the associated attributes are going to be removed.
 
 ## Attribute Filtering
