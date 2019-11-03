@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.4.0```**
+**```Current App version: 0.4.1```**
 
 <br>
 
@@ -39,6 +39,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.3.2*** Another try to deal with websocket issues<br>
 ***v0.3.3*** Fixed programmed buttons implementation, further testing on websocket connection, reloading of attribute states via HTTP if websocket connection is "broken", some refactoring<br>
 ***v0.4.0*** Adapted to new MakerAPI event-stream released with Hubitat release 2.1.6, websocket connection is used as fallback if MakerAPI stream is not supported, new configuration options for "local_ip" and "local_port" added, clean reload after lost communication with hub<br>
+***v0.4.1*** Fixed an issue during start and concurrent requests to MakerAPI<br>
 # Explanation:
 
 ### Direct Updates

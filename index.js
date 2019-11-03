@@ -144,11 +144,18 @@ HE_ST_Platform.prototype = {
                     if (that.communication_reload_running != true) {
                         that.communication_reload_running = true;
                         that.log.good('Set communcation_broken to ' + newValue);
-                        that.reloadData(function() { 
-                            that.communication_broken = newValue; 
+                        if (that.firstpoll == false) {
+                            that.reloadData(function() { 
+                                that.communication_broken = newValue; 
+                                that.communication_reload_running = false;
+                                resolve(''); 
+                            });
+                        }
+                        else {
+                            that.communication_broken = newValue;
                             that.communication_reload_running = false;
-                            resolve(''); 
-                        });
+                            resolve('');
+                        }
                     }
                 }
             }
@@ -460,8 +467,8 @@ HE_ST_Platform.prototype = {
         }).then(function(myList) {
             if (callback)
                 callback(foundAccessories);
-            that.firstpoll = false;
             that.setCommunicationBroken(false).then(function() {}).catch(function(){});
+            that.firstpoll = false;
         }).catch(function(error) {
             if (error.hasOwnProperty('statusCode'))
             {
