@@ -63,7 +63,7 @@ When properly setup, you should see something like this in your Homebridge start
 * Tap <u><b>```Done```</b></u> and you are finished with the App configuration.
 * Go into the newly added Maker API app
 * Select the devices you would like to have available via HomeKit
-* Enable "Include Location Events" to support HSM and Modes with Homekit
+* Enable <u><b>```Include Location Events```</b></u> to support HSM and chaning of modes
 * At the bottom you see a few examples of access URLs. You will need two parts of this (App URL and Access Token)
     * example: <div style=" overflow:auto;width:auto;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #e6db74">http://192.168.10.169/apps/api/132/devices/[Device ID]?access_token=148fc06d-7627-40b0-8435-8d0cc31617ab</span></div>
         * The App URL is <div style=" overflow:auto;width:auto;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #e6db74">http://192.168.10.169/apps/api/132/</span></div>
