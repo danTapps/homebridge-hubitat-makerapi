@@ -44,6 +44,7 @@ function HE_ST_Platform(log, config, api) {
         return null;
     }
     var logFileSettings = null;
+
     if (config['logFile']) {
         if (config['logFile'].enabled) {
            logFileSettings = {};
@@ -54,6 +55,15 @@ function HE_ST_Platform(log, config, api) {
            logFileSettings.size = config['logFile'].size || '10m';
         }
     }
+    else {
+        logFileSettings = {};
+        logFileSettings.path = api['user'].storagePath();
+        logFileSettings.file = "homebridge-hubitat.log";
+        logFileSettings.compress = true;
+        logFileSettings.keep = 5;
+        logFileSettings.size = '10m';
+    }
+    this.logFileSettings = logFileSettings;
  
     this.config = config; 
     if (pluginName === 'homebridge-hubitat-makerapi')
@@ -677,6 +687,14 @@ HE_ST_Platform.prototype = {
     accessories: function(callback) {
         var that = this;
         callback([]);
+    },
+    dumpAttributeDevices: function(attribute) {
+        if (!this.attributeLookup[attribute])
+            platform.log.debug('Attribute ' + attribute + ' is not used at all');
+        else
+            for (k in this.attributeLookup[attribute]) {
+                platform.log.debug('Attribute ' + attribute + ' is defined for device id ' + k);
+            }
     },
     isAttributeUsed: function(attribute, deviceid) {
         if (!this.attributeLookup[attribute])
