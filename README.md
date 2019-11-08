@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.4.4```**
+**```Current App version: 0.4.5```**
 
 <br>
 
@@ -41,7 +41,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.4.0*** Adapted to new MakerAPI event-stream released with Hubitat release 2.1.6, websocket connection is used as fallback if MakerAPI stream is not supported, new configuration options for "local_ip" and "local_port" added, clean reload after lost communication with hub<br>
 ***v0.4.1*** Fixed an issue during start and concurrent requests to MakerAPI<br>
 ***v0.4.2*** Added automatic detection of free port to listen on for event stream<br>
-***v0.4.4*** Added diagnostic website hosted by plugin to see/download log files and enable debug logging<br>
+***v0.4.5*** Added diagnostic website hosted by plugin to see/download log files and enable debug logging<br>
 # Explanation:
 
 ### Direct Updates
