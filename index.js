@@ -278,6 +278,7 @@ HE_ST_Platform.prototype = {
                 that.log('polling_seconds really shouldn\'t be smaller than 30 seconds. Setting it to 30 seconds');
                 that.polling_seconds = 30;
             }
+            that.removeDeviceAttributeUsage('filterundefined');
             setInterval(that.reloadData.bind(that), that.polling_seconds * 1000);
             setInterval(that.doVersionCheck.bind(that), 24 * 60 * 60 * 1000); //60 seconds
             that.receiver.start(that);
