@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.4.5```**
+**```Current App version: 0.4.6```**
 
 <br>
 
@@ -42,6 +42,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.4.1*** Fixed an issue during start and concurrent requests to MakerAPI<br>
 ***v0.4.2*** Added automatic detection of free port to listen on for event stream<br>
 ***v0.4.5*** Added diagnostic website hosted by plugin to see/download log files and enable debug logging<br>
+***v0.4.6*** Fixed thermostat low battery warnings, fixed iOS13 duplicate calling of setThermostatOperationgMode, some UI changes in diagnostic website<br>
 # Explanation:
 
 ### Direct Updates
