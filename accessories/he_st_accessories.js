@@ -268,23 +268,45 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     }
                 })
                 .on('set', function(value, callback) {
-                    switch (value) {
-                        case Characteristic.TargetHeatingCoolingState.COOL:
-                            platform.api.runCommand(device.deviceid, 'cool').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
-                            that.device.attributes.thermostatMode = 'cool';
+                    var currentTarget = Characteristic.TargetHeatingCoolingState.OFF;
+                    switch (that.device.attributes.thermostatMode) {
+                        case 'cool':
+                            currentTarget = Characteristic.TargetHeatingCoolingState.COOL;
                             break;
-                        case Characteristic.TargetHeatingCoolingState.HEAT:
-                            platform.api.runCommand(device.deviceid, 'heat').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
-                            that.device.attributes.thermostatMode = 'heat';
+                        case 'emergency heat':
+                        case 'heat':
+                            currentTarget = Characteristic.TargetHeatingCoolingState.HEAT;
                             break;
-                        case Characteristic.TargetHeatingCoolingState.AUTO:
-                            platform.api.runCommand(device.deviceid, 'auto').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
-                            that.device.attributes.thermostatMode = 'auto';
+                        case 'auto':
+                            currentTarget = Characteristic.TargetHeatingCoolingState.AUTO
                             break;
-                        case Characteristic.TargetHeatingCoolingState.OFF:
-                            platform.api.runCommand(device.deviceid, 'off').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
-                            that.device.attributes.thermostatMode = 'off';
+                        case 'idle':
+                            platform.log.good('It is idle');
+                        default:
                             break;
+                    } 
+                    if (currentTarget == value) {
+                        if (callback)
+                            callback(null, value);
+                    } else {
+                        switch (value) {
+                            case Characteristic.TargetHeatingCoolingState.COOL:
+                                platform.api.runCommand(device.deviceid, 'cool').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                                that.device.attributes.thermostatMode = 'cool';
+                                break;
+                            case Characteristic.TargetHeatingCoolingState.HEAT:
+                                platform.api.runCommand(device.deviceid, 'heat').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                                that.device.attributes.thermostatMode = 'heat';
+                                break;
+                            case Characteristic.TargetHeatingCoolingState.AUTO:
+                                platform.api.runCommand(device.deviceid, 'auto').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                                that.device.attributes.thermostatMode = 'auto';
+                                break;
+                            case Characteristic.TargetHeatingCoolingState.OFF:
+                                platform.api.runCommand(device.deviceid, 'off').then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
+                                that.device.attributes.thermostatMode = 'off';
+                                break;
+                        }
                     }
                 });
             platform.addAttributeUsage('thermostatMode', device.deviceid, thisCharacteristic);
@@ -311,15 +333,18 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     var temp;
                     switch (that.device.attributes.thermostatMode) {
                         case 'cool':
+                        case 'cooling':
                             temp = that.device.attributes.coolingSetpoint;
                             break;
                         case 'emergency heat':
                         case 'heat':
+                        case 'heating':
                             temp = that.device.attributes.heatingSetpoint;
                             break;
                         default:
                             switch(that.device.attributes.thermostatOperatingState) {
                                 case 'cooling':
+                                case 'cool':
                                     temp = that.device.attributes.coolingSetpoint;
                                     break;
                                 default:
@@ -348,13 +373,16 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     // Set the appropriate temperature unit based on the mode
                     switch (that.device.attributes.thermostatMode) {
                         case 'cool':
+                        case 'cooling':
                             platform.api.runCommand(device.deviceid, 'setCoolingSetpoint', {
                                 value1: temp
                             }).then(function(resp) {if (callback) callback(null, value); }).catch(function(err) { if (callback) callback(err); });
                             that.device.attributes.coolingSetpoint = temp;
+                            that.device.attributes.thermostatSetpoint = temp;
                             break;
                         case 'emergency heat':
                         case 'heat':
+                        case 'heating':
                             platform.api.runCommand(device.deviceid, 'setHeatingSetpoint', {
                                 value1: temp
                             }).then(function(resp) {
@@ -365,8 +393,19 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                                     callback(err); 
                             });
                             that.device.attributes.heatingSetpoint = temp;
+                            that.device.attributes.thermostatSetpoint = temp;
                             break;
                         default:
+                            platform.api.runCommand(device.deviceid, 'setThermostatSetpoint ', {
+                                value1: temp
+                            }).then(function(resp) {
+                                if (callback)
+                                    callback(null, value);
+                            }).catch(function(err) {
+                                if (callback)
+                                    callback(err);
+                            });
+                            that.device.attributes.thermostatSetpoint = temp;
                             // This should only refer to auto
                             // Choose closest target as single target
                             /*
@@ -390,6 +429,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             platform.addAttributeUsage('thermostatMode', device.deviceid, thisCharacteristic);
             platform.addAttributeUsage('coolingSetpoint', device.deviceid, thisCharacteristic);
             platform.addAttributeUsage('heatingSetpoint', device.deviceid, thisCharacteristic);
+             platform.addAttributeUsage('thermostatSetpoint', device.deviceid, thisCharacteristic);
             platform.addAttributeUsage('temperature', device.deviceid, thisCharacteristic);
             thisCharacteristic = that.getaddService(Service.Thermostat).getCharacteristic(Characteristic.TemperatureDisplayUnits)
                 .on('get', function(callback) {
@@ -460,6 +500,13 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     });
                 platform.addAttributeUsage('thermostatFanMode', device.deviceid, thisCharacteristic);
             }
+            if (!(that.device.attributes.hasOwnProperty('battery'))) {
+                that.getaddService(Service.BatteryService).setCharacteristic(Characteristic.StatusLowBattery, Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL);
+                that.getaddService(Service.BatteryService).setCharacteristic(Characteristic.ChargingState, Characteristic.ChargingState.NOT_CHARGING);
+            }
+            that.getaddService(Service.Thermostat).addOptionalCharacteristic(Characteristic.StatusActive);
+            that.getaddService(Service.Thermostat).setCharacteristic(Characteristic.StatusActive, true);
+            
         }
     if (that.device.attributes.hasOwnProperty('switch') && group !== 'mode' && !deviceIsFan())
     {
