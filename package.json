@@ -1,7 +1,7 @@
 {
     "name": "homebridge-hubitat-makerapi",
     "description": "Hubitat plugin for HomeBridge with MakerAPI",
-    "version": "0.4.5",
+    "version": "0.4.6",
     "license": "ISC",
     "preferGlobal": true,
     "keywords": [
