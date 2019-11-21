@@ -8,7 +8,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 ##### Table of Contents  
 **[Change Log](#change-log)**<br>
-**[Installation](#installation)**<br>  
+**[Installation](#installation)**<br>
 **[Configuration File Parameters](#configuration-file-parameters)**<br>
 **[Capability Filtering](#capability-filtering)**<br>
 **[Attribute Filtering](#attribute-filtering)**<br>
