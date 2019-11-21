@@ -12,6 +12,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 **[Configuration File Parameters](#configuration-file-parameters)**<br>
 **[Capability Filtering](#capability-filtering)**<br>
 **[Attribute Filtering](#attribute-filtering)**<br>
+**[Troubleshooting](#troubleshooting)**<br>
 
 # Change Log
 
@@ -86,7 +87,7 @@ When properly setup, you should see something like this in your Homebridge start
 
  # Configuration File Parameters
 
-  <h4 style="padding: 0em .6em; margin-bottom: 5px;"><u>Example of all settings. Not all settings are required. Read the breakdown below</u></h4>
+  <h4 style="padding: 0em .6em; margin-bottom: 5px;"><u>Example of all settings. Not all settings are required. Read the breakdown below. There is also a tool to help you creating a config.json file located <a href="https://dantapps.github.io" target="_blank">here</a></u></h4>
 
    <div style=" overflow:auto;width:auto;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #f8f8f2">{</span>
    <span style="color: #f92672">&quot;platform&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;Hubitat-MakerAPI&quot;</span><span style="color: #f8f8f2">,</span>
@@ -226,3 +227,12 @@ To do so, you would add the following configuration to your config.json:
    <span style="color: #f8f8f2">    ]</span>
    <span style="color: #f8f8f2">}</span>
 </pre></div>
+
+# Troubleshooting
+With version ***v.0.4.5*** a plugin dashboard is available to help troubeshooting.
+The dashboard is a website that can be reached while homebridge and the plugin are running.
+To reach the dashboard, you can follow these steps:
+1. In Hubitat, go open your MakerAPI Instance
+2. Scroll down to find your "URL to send device events to by POST"
+3. Copy the URL and enter the URL in a new browser window
+4. You will see a view like this, showing you the logging output of the plugin, the ability to download the log-file to your computer, enablign and disabling debug mode
