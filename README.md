@@ -11,8 +11,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 [Installation](#installation)  
 
 <br>
-<a href="change_log"></a>
-# Change Log:
+## Change Log:
 
 #### Hubitat App:
 
@@ -61,8 +60,7 @@ When properly setup, you should see something like this in your Homebridge start
 ```
 
 <br>
-<a href="Installation"></a>
-# Installation:
+## Installation:
 
 ## 1. Hubitat MakerAPI App Configuration
 
