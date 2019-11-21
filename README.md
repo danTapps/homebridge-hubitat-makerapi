@@ -9,6 +9,9 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ##### Table of Contents  
 **[Change Log](#change-log)**<br>
 **[Installation](#installation)**<br>  
+**[Configuration File Parameters](#configuration-file-parameters)**<br>
+**[Capability Filtering](#capability-filtering)**<br>
+**[Attribute Filtering](#attribute-filtering)**<br>
 
 # Change Log
 
@@ -85,7 +88,7 @@ When properly setup, you should see something like this in your Homebridge start
  2. Install Hubitat plugin using: ```npm i -g homebridge-hubitat-makerapi```
  3. Update your configuration file. See sample config.json snippet below.
 
-  <h3 style="padding: 0em .6em;">Config.json Settings Example</h3>
+ # Configuration File Parameters
 
   <h4 style="padding: 0em .6em; margin-bottom: 5px;"><u>Example of all settings. Not all settings are required. Read the breakdown below</u></h4>
 
