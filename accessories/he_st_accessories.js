@@ -396,7 +396,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             that.device.attributes.thermostatSetpoint = temp;
                             break;
                         default:
-                            platform.api.runCommand(device.deviceid, 'setThermostatSetpoint ', {
+                            platform.api.runCommand(device.deviceid, 'setThermostatSetpoint', {
                                 value1: temp
                             }).then(function(resp) {
                                 if (callback)
