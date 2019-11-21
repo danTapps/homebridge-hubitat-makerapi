@@ -1502,6 +1502,8 @@ function convertAlarmState(value, valInt = false) {
         case 'off':
         case 'disarm':
         case 'disarmed':
+        case 'allDisarmed':
+        case 'alldisarmed':
         case 3:
             return valInt ? Characteristic.SecuritySystemCurrentState.DISARMED : 'disarm';
         case 'alarm_active':
