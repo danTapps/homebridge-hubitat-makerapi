@@ -80,7 +80,7 @@ When properly setup, you should see something like this in your Homebridge start
  1. Install homebridge using: ```sudo npm i -g homebridge``` (For Homebridge Install: [Homebridge Instructions](https://github.com/nfarina/homebridge/blob/master/README.md))
  2. Install Hubitat plugin using: ```sudo npm i -g homebridge-hubitat-makerapi```
  3. Create your config.json configuration file. The config.json file has to be stored in the folder ~/.homebridge
- 4. To help creating your inital configuration file, **[click here](https://dantapps.github.io)** for some assistance.
+ 4. To help creating your inital configuration file, **<a href="https://dantapps.github.io" target="_blank">click here</a>** for some assistance.
  5. Start homebridge using the command: ```homebridge```
 
 
