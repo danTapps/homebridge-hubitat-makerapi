@@ -10,7 +10,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 **[Change Log](#change-log)**<br>
 **[Installation](#installation)**<br>  
 
-# Change Log:
+# Change Log
 
 #### Hubitat App:
 
@@ -57,9 +57,9 @@ When properly setup, you should see something like this in your Homebridge start
 [2019-4-12 14:22:51] [Hubitat] homebridge-hubitat-makerapi server listening on 20009
 [2019-4-12 14:22:51] Homebridge is running on port 51826.
 ```
-
 <br>
-# Installation:
+
+# Installation
 
 ## 1. Hubitat MakerAPI App Configuration
 
