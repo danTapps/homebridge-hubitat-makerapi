@@ -74,19 +74,15 @@ When properly setup, you should see something like this in your Homebridge start
 * Go into the newly added Maker API app
 * Select the devices you would like to have available via HomeKit
 * Enable <u><b>```Include Location Events```</b></u> to support HSM and chaning of modes
-* At the bottom you see a few examples of access URLs. You will need two parts of this (App URL and Access Token)
-    * example: <div style=" overflow:auto;width:auto;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #e6db74">http://192.168.10.169/apps/api/132/devices/[Device ID]?access_token=148fc06d-7627-40b0-8435-8d0cc31617ab</span></div>
-        * The App URL is <div style=" overflow:auto;width:auto;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #e6db74">http://192.168.10.169/apps/api/132/</span></div>
-        * The Access Token is <div style=" overflow:auto;width:auto;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #e6db74">148fc06d-7627-40b0-8435-8d0cc31617ab</span></div>
-    * Remember these two values for later
-* Tap <u><b>```Done```</b></u> and you are finished with the App configuration.
-
 
 ## 2. Homebridge Plugin Installation:
 
- 1. Install homebridge using: ```npm i -g homebridge``` (For Homebridge Install: [Homebridge Instructions](https://github.com/nfarina/homebridge/blob/master/README.md))
- 2. Install Hubitat plugin using: ```npm i -g homebridge-hubitat-makerapi```
- 3. Update your configuration file. See sample config.json snippet below.
+ 1. Install homebridge using: ```sudo npm i -g homebridge``` (For Homebridge Install: [Homebridge Instructions](https://github.com/nfarina/homebridge/blob/master/README.md))
+ 2. Install Hubitat plugin using: ```sudo npm i -g homebridge-hubitat-makerapi```
+ 3. Create your config.json configuration file. The config.json file has to be stored in the folder ~/.homebridge
+ 4. To help creating your inital configuration file, **[click here](https://dantapps.github.io)** for some assistance.
+ 5. Start homebridge using the command: ```homebridge```
+
 
  # Configuration File Parameters
 
