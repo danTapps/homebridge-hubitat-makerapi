@@ -429,7 +429,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
             platform.addAttributeUsage('thermostatMode', device.deviceid, thisCharacteristic);
             platform.addAttributeUsage('coolingSetpoint', device.deviceid, thisCharacteristic);
             platform.addAttributeUsage('heatingSetpoint', device.deviceid, thisCharacteristic);
-             platform.addAttributeUsage('thermostatSetpoint', device.deviceid, thisCharacteristic);
+            platform.addAttributeUsage('thermostatSetpoint', device.deviceid, thisCharacteristic);
             platform.addAttributeUsage('temperature', device.deviceid, thisCharacteristic);
             thisCharacteristic = that.getaddService(Service.Thermostat).getCharacteristic(Characteristic.TemperatureDisplayUnits)
                 .on('get', function(callback) {
