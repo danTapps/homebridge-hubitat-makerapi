@@ -274,7 +274,7 @@ HE_ST_Platform.prototype = {
             setTimeout(that._didFinishLaunching.bind(that), 1000);
             return;
         }
-        this.log('Fetching ' + platformName + ' devices. This can take a while depending on the number of devices are configured!');
+        this.log('Fetching ' + platformName + ' devices. This can take a while depending on the number of devices configured!');
         var that = this;
         var starttime = new Date();
         this.reloadData(function(foundAccessories) {
@@ -390,7 +390,19 @@ HE_ST_Platform.prototype = {
                             });
                     }
                 }   
-            }
+            }/* //TRYING TO RENAME doesn't work that way....
+            for (var i = 0; i < devices.length; i++) {
+                if (that.deviceLookup[uuidGen(devices[i].id)] instanceof HE_ST_Accessory) {
+                    platform.log(util.inspect(that.deviceLookup[uuidGen(devices[i].id)].accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.Name), false, null, true));
+                    var props = [];
+                    that.deviceLookup[uuidGen(devices[i].id)].accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.Name)
+                        .setProps({
+                            perms: [ 'pr','pw' ]
+                        });
+                    that.deviceLookup[uuidGen(devices[i].id)].accessory.getService(Service.AccessoryInformation).getCharacteristic(Characteristic.Name)
+                        .updateValue('Device ' + i);
+                }
+            }*/
             if(!that.firstpoll) { 
                 var updateAccessories = [];
                 for (var key in that.deviceLookup) {
