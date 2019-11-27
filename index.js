@@ -23,6 +23,7 @@ const uuidGen = require('./accessories/he_st_accessories').uuidGen;
 const uuidDecrypt = require('./accessories/he_st_accessories').uuidDecrypt;
 const Logger = require('./lib/Logger.js').Logger;
 var homebridge_version, homebride_serverVersion;
+var ipRangeCheck = require("ip-range-check");
 
 module.exports = function(homebridge) {
     console.log("Homebridge Version: " + homebridge.version);
@@ -84,13 +85,14 @@ function HE_ST_Platform(log, config, api) {
         this.local_port = 20010;
     }
 
-    this.local_ip = config['local_ip'];
-    if (this.local_ip === undefined || this.local_ip === '') {
-        this.local_ip = getIPAddress();
-        this.log.good('Setting "local_ip" not set in config, tried to determine it and found ' + this.local_ip + " -> I hope this is correct");    
-    }    
     this.app_url = config['app_url'];
     this.app_id = config['app_id'];
+
+    this.local_ip = config['local_ip'];
+    if (this.local_ip === undefined || this.local_ip === '') {
+        this.local_ip = getIPAddress(this.app_url);
+        this.log.good('Setting "local_ip" not set in config, tried to determine it and found ' + this.local_ip + " -> I hope this is correct");
+    }
     this.access_token = config['access_token'];
     this.excludedAttributes = config["excluded_attributes"] || [];
     this.excludedCapabilities = config["excluded_capabilities"] || [];
@@ -776,16 +778,30 @@ HE_ST_Platform.prototype = {
     }
 };
 
-function getIPAddress() {
+function getIPAddress(config_url) {
+    var destination = '';
+    try {
+        destination = URL.parse(config_url).host;
+    } catch (exception) {
+    }
+    var returnValue = '';
     var interfaces = os.networkInterfaces();
     for (var devName in interfaces) {
         var iface = interfaces[devName];
         for (var i = 0; i < iface.length; i++) {
             var alias = iface[i];
             if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
-                return alias.address;
+                if (returnValue.length == 0)
+                    returnValue = alias.address; //save first value no matter what as fallback
+                if (ipRangeCheck(destination, alias.cidr)) {
+                    console.log('found subnet for ' + destination + ' on interface ip ' + alias.address);
+                    returnValue = alias.address;
+                }
             }
         }
     }
-    return '0.0.0.0';
+    if (returnValue.length == 0)
+        returnValue = '0.0.0.0';
+    return returnValue;
 }
+
