@@ -50,7 +50,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.4.5*** Added diagnostic website hosted by plugin to see/download log files and enable debug logging<br>
 ***v0.4.6*** Fixed thermostat low battery warnings, fixed iOS13 duplicate calling of setThermostatOperationgMode, some UI changes in diagnostic website<br>
 ***v0.4.7*** Fixed null attribute on battery for thermostats<br>
-***v0.4.8*** Fixed setting Thermostat temperatures in auto mode, fixed Alarm Tile in Home App when HSM is disarmed with 'Disarm All' by RM<br>
+***v0.4.8*** Fixed setting Thermostat temperatures in auto mode, fixed Alarm Tile in Home App when HSM is disarmed with 'Disarm All' by RM, better detection of local_ip based on app_url host<br>
 # Explanation:
 
 ### Direct Updates
