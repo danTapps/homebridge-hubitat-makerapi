@@ -233,8 +233,8 @@ With version ***v0.4.5*** a plugin dashboard is available to help troubeshooting
 The dashboard is a website that can be reached while homebridge and the plugin are running.
 To reach the dashboard, you can follow these steps:
 1. In Hubitat, go open your MakerAPI Instance
-![alt text](https://raw.githubusercontent.com/danTapps/homebridge-hubitat-makerapi/dev/images/posturl.png "POST Url")
 2. Scroll down to find your "URL to send device events to by POST"
+![alt text](https://raw.githubusercontent.com/danTapps/homebridge-hubitat-makerapi/dev/images/posturl.png "POST Url")
 3. Copy the URL and enter the URL in a new browser window
 4. You will see a view like this, showing you the logging output of the plugin, the ability to download the log-file to your computer, enablign, disabling debug mode and see your current configuration
 ![alt text](https://raw.githubusercontent.com/danTapps/homebridge-hubitat-makerapi/dev/images/dashboard.png "Dashboard")
