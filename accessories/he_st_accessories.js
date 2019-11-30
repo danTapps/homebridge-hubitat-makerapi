@@ -396,16 +396,19 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                             that.device.attributes.thermostatSetpoint = temp;
                             break;
                         default:
-                            platform.api.runCommand(device.deviceid, 'setThermostatSetpoint', {
-                                value1: temp
-                            }).then(function(resp) {
-                                if (callback)
-                                    callback(null, value);
-                            }).catch(function(err) {
-                                if (callback)
-                                    callback(err);
-                            });
-                            that.device.attributes.thermostatSetpoint = temp;
+                            //HOMEKIT is calcuating the average between the cooling setpoint and the heating setpoint and sets all of them, so let's not do anything here and let the Thermostat do the 
+                            // right thing in auto mode
+
+                            //platform.api.runCommand(device.deviceid, 'setThermostatSetpoint', {
+                            //    value1: temp
+                            //}).then(function(resp) {
+                            //    if (callback)
+                            //        callback(null, value);
+                            //}).catch(function(err) {
+                            //    if (callback)
+                            //        callback(err);
+                            //});
+                            //that.device.attributes.thermostatSetpoint = temp;
                             // This should only refer to auto
                             // Choose closest target as single target
                             /*
