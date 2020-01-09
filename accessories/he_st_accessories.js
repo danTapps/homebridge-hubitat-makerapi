@@ -318,6 +318,10 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 platform.addAttributeUsage('humidity', device.deviceid, thisCharacteristic);
             }
             thisCharacteristic = that.getaddService(Service.Thermostat).getCharacteristic(Characteristic.CurrentTemperature)
+                .setProps({
+                    minValue: -100,
+                    maxValue: 200
+                })
                 .on('get', function(callback) {
                     let temp = 0;
                     if (platform.temperature_unit === 'C') {
