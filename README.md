@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.4.10```**
+**```Current App version: 0.4.11```**
 
 ##### Table of Contents  
 **[Change Log](#change-log)**<br>
@@ -53,6 +53,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.4.8*** Fixed setting Thermostat temperatures in auto mode, fixed Alarm Tile in Home App when HSM is disarmed with 'Disarm All' by RM, better detection of local_ip based on app_url host<br>
 ***v0.4.9*** Fixed Alarm Tile reset when custom rule alert was canceled<br>
 ***v0.4.10*** Fixed thermostat setpoint in auto mode for Thermostats<br>
+***v0.4.11*** Fixed exception on button events<br>
 # Explanation:
 
 ### Direct Updates
