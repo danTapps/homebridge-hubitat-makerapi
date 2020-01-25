@@ -776,11 +776,11 @@ HE_ST_Platform.prototype = {
                 var accessory = that.deviceLookup[uuidGen(attributeSet.device)];
                 if (accessory) {
                     accessory.device.attributes[attributeSet.attribute] = attributeSet.value;
-                    if ((attributeSet.attribute === 'pushed') && platform.isProgrammableButton(attributeSet.device))
+                    if ((attributeSet.attribute === 'pushed') && that.isProgrammableButton(attributeSet.device))
                         myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.SINGLE_PRESS);
-                    else if ((attributeSet.attribute === 'doubleTapped') && platform.isProgrammableButton(attributeSet.device))
+                    else if ((attributeSet.attribute === 'doubleTapped') && that.isProgrammableButton(attributeSet.device))
                         myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.DOUBLE_PRESS);
-                    else if ((attributeSet.attribute === 'held') && platform.isProgrammableButton(attributeSet.device))
+                    else if ((attributeSet.attribute === 'held') && that.isProgrammableButton(attributeSet.device))
                         myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.LONG_PRESS);
                     else
                         myUsage[j].getValue();
