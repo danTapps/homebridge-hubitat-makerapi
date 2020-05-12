@@ -1,0 +1,223 @@
+{
+  "pluginAlias": "Hubitat-Maker-API",
+  "pluginType": "platform",
+  "singular": true,
+  "headerDisplay": " For Detailed instructions go [here](https://github.com/danTapps/homebridge-hubitat-makerapi/blob/master/README.md)<br>Cannot be configured using UI: `excluded_attributes` and `excluded_capabilities`.",
+  "footerDisplay": " When configuring with UI it might put some boolean values in your config.json that are unnecesary.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "default": "Hubitat",
+        "required": true
+      },
+      "app_url": {
+        "title": "App Url",
+        "type": "string",
+        "required": true
+      },
+      "access_token": {
+        "title": "Access Token",
+        "type": "string",
+        "required": true
+      },
+      "local_ip": {
+        "title": "Local IP",
+        "type": "string",
+        "required": false
+      },
+      "local_port": {
+        "title": "Local Port",
+        "type": "integer",
+        "placeholder": 20010,
+        "required": false
+      },
+      "polling_seconds": {
+        "title": "Polling Seconds",
+        "type": "integer",
+        "placeholder": 300,
+        "required": false
+      },
+      "temperature_unit": {
+        "title": "Temperature Units",
+        "type": "string",
+        "placeholder": "F",
+        "required": false
+      },
+      "mode_switches": {
+        "title": "Mode Switches",
+        "type": "boolean",
+        "description": "Defaults to false unless specified in the config",
+        "default": false,
+        "required": false
+      },
+      "hsm": {
+        "title": "HSM",
+        "description": "Defaults to false unless specified in the config",
+        "type": "boolean",
+        "default": false,
+        "required": false
+      },
+      "debug": {
+        "title": "Enable Debugging of HTTP calls",
+        "description": "Defaults to false unless specified in the config",
+        "type": "boolean",
+        "default": false,
+        "required": false
+      },
+      "programmable_buttons": {
+        "title": "Programmable Button",
+        "type": "array",
+        "required": false,
+        "uniqueItems": true,
+        "items": {
+          "type": "integer"
+        }
+      },
+      "logFile": {
+        "title": "Log File",
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "title": "Enable Log File",
+            "type": "boolean",
+            "default": true
+          },
+          "path": {
+            "title": "Path",
+            "description": "Path to store log files. Defaults to path where config.json is stored",
+            "type": "string"
+          },
+          "file": {
+            "title": "File Name",
+            "description": "Filename of log file",
+            "type": "string",
+            "placeholder": "homebridge-hubitat.log"
+          },
+          "compress": {
+            "title": "Compress Log Files",
+            "description": "Compress log files when they rotate.",
+            "type": "boolean",
+            "default": true
+          },
+          "keep": {
+            "title": "Keep # of Log Files",
+            "description": "Number of log files to keep before deleting old log files",
+            "type": "integer",
+            "placeholder": 5
+          },
+          "size": {
+            "title": "Max Size of Log File",
+            "type": "string",
+            "placeholder": "10m"
+          }
+        }
+      }
+    }
+  },
+  "layout": [
+    "name",
+    {
+      "type": "help",
+      "helpvalue": "<em class='primary-text'>Enter the App url and Access Token obtained from your Hubitat MakerAPI App Configuration"
+    },
+    {
+      "type": "flex",
+      "flex-flow": "row wrap",
+      "items": [
+        {
+          "type": "flex",
+          "flex-flow": "column",
+          "items": [
+            "app_url"
+          ]
+        },
+        {
+          "type": "flex",
+          "flex-flow": "column",
+          "items": [
+            "access_token"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "fieldset",
+      "title": "Optional Settings",
+      "expandable": true,
+      "expanded": false,
+      "items": [
+        {
+          "key": "local_ip",
+          "title": "Local IP",
+          "description": "<p class='help-block'>Use this setting to force the IP presented to Hubitat for the hub to send to</p>",
+          "items": {
+            "type": "string",
+            "placeholder": " Enter your homebridge instance's ip..."
+          }
+        },
+        {
+          "description": "<p class='help-block'>This is the port that homebridge-hubitat-makerapi plugin will listen on for events from your hub</p>",
+          "key": "local_port",
+          "title": "Local Port",
+          "items": {
+            "type": "number",
+            "placeholder": "Enter port.."
+          }
+        },
+        {
+          "description": "<p class='help-block'>Configures the how often (in seconds) the plugin should check if devices were removed or added from/to the selection in MakerAPI.</p>",
+          "key": "polling_seconds",
+          "title": "How often to Poll",
+          "items": {
+            "type": "number",
+            "placeholder": "Enter a time period in seconds"
+          }
+        },
+        {
+          "description": "<p class='help-block'>Ability to configure between Celsius and Fahrenheit.</p>",
+          "key": "temperature_unit",
+          "title": "Temperature Unit",
+          "items": {
+            "type": "string",
+            "placeholder": "F or C"
+          }
+        },
+        "mode_switches",
+        "hsm",
+        "debug",
+        {
+          "notitle": true,
+          "description": "<h5>Programmable Button</h5><p class='help-block'>Specify the Hubitat device by ID in this setting to create a programmable button.</p>",
+          "key": "programmable_buttons",
+          "title": "Programmable Button",
+          "type": "array",
+          "items": {
+            "type": "number",
+            "placeholder": "Enter device id..."
+          }
+        },
+        {
+          "type": "help",
+          "helpvalue": "<h5>Log File</h5>"
+        }
+      ]
+    },
+    {
+      "type": "fieldset",
+      "title": "Log File Settings",
+      "expandable": true,
+      "expanded": false,
+      "items": [
+        "logFile.enabled",
+        "logFile.path",
+        "logFile.file",
+        "logFile.compress",
+        "logFile.keep",
+        "logFile.size"
+      ]
+    }
+  ]
+}
