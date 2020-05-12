@@ -7,53 +7,14 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 **```Current App version: 0.4.11```**
 
 ##### Table of Contents  
-**[Change Log](#change-log)**<br>
+**[Change Log](https://github.com/danTapps/homebridge-hubitat-makerapi/blob/master/CHANGELOG.md)**<br>
 **[Installation](#installation)**<br>
 **[Configuration File Parameters](#configuration-file-parameters)**<br>
 **[Capability Filtering](#capability-filtering)**<br>
 **[Attribute Filtering](#attribute-filtering)**<br>
 **[Troubleshooting](#troubleshooting)**<br>
 
-# Change Log
 
-#### Hubitat App:
-
-***v0.1.0*** - Ported app over from my tonesto7 version and added Websocket channel. Reworked Device Classification, HSM and modes currently not supported!!!<br>
-***v0.1.2*** - Fixed bug of not updating tiles in HomeKit after an hour expired<br>
-***v0.1.7*** - Fixed issuse with Siri, Show version number in logging output<br>
-***v0.1.8*** - Fixed issue with setting Thermostat temperature, make a device a Fan if it has the attributes switch and level and the device type contains the words "fan control"<br>
-***v0.1.9*** - Added ability to filter out attributes and capabilities<br>
-***v0.1.10*** - Fixed Hampton Bay Fan Component<br>
-***v0.1.11 - v0.1.17*** - Several attempts to mess with messy fans...<br>
-***v0.2.0*** - migrated to dynamic homebridge platform that removes the need of restarting homebridge after a device selection was changed in MakerAPI, configure homebridge to use Celsius, fixed fan tile on/off functionallity, ability to create switch tiles for modes and switching of modes, HSM integration, reduced load on Hubitat at plugin start by removing dependency on full detail API call, plugin startup speed improved, perform daily version check against NPMJS and print logging statement on newer versions available<br>
-***v0.2.1 - v0.2.4*** - Fixed attribute filtering for cached devices <br>
-***v0.2.5*** allows correct usage of DNS host names instead of IP address to connect to hubitat, fans that support setLevel use setLevel instead of setSpeed to allow finer granularity, code baselined with homebridge-hubitat-hubconnect plugin to allow faster cross-sharing of improvements<br>
-***v0.2.6*** Fixed issue with multi sensors not updating temperature and humidity, fixed issue that temperature can't go negative<br>
-***v0.2.7 - v.0.2.8*** problems with deasync module, removed it<br>
-***v0.2.9*** fixed on/off for hampton bay controller, fixed water valve<br>
-***v0.2.10*** Hampton Bay Fan Controllers say they have speed level even though they are off, let's fix that<br>
-***v0.2.11*** Added some debug for fans....<br>
-***v0.2.13*** Fixed garage door implementation and set obstruction when status is unknown/stopped<br>
-***v0.2.14*** Added "debug" mode to see calls to MakerAPI in output. See description below on how to enable it. <br>
-***v0.2.15*** Added ability to write logging to file<br>
-***v0.2.16*** Fixed rounding issue for thermostats in auto mode<br>
-***v0.2.17*** Added support for colorTemperature bulbs<br>
-***v0.2.18*** Added thermostat fan switch support (thanks @swiss6th), added ping/pong for websockets (thanks @asj)<br>
-***v0.2.19*** Added some additional testing on websocket status to track down an issue...<br>
-***v0.3.0*** Added Button support, limited to "push" for 1 button, see ***"programmable_buttons"*** for advanced programmable button support (thanks to @swiss6th for the code base)<br>
-***v0.3.1*** fixed double usage of switch if a button also has the switch attribute<br>
-***v0.3.2*** Another try to deal with websocket issues<br>
-***v0.3.3*** Fixed programmed buttons implementation, further testing on websocket connection, reloading of attribute states via HTTP if websocket connection is "broken", some refactoring<br>
-***v0.4.0*** Adapted to new MakerAPI event-stream released with Hubitat release 2.1.6, websocket connection is used as fallback if MakerAPI stream is not supported, new configuration options for "local_ip" and "local_port" added, clean reload after lost communication with hub<br>
-***v0.4.1*** Fixed an issue during start and concurrent requests to MakerAPI<br>
-***v0.4.2*** Added automatic detection of free port to listen on for event stream<br>
-***v0.4.5*** Added diagnostic website hosted by plugin to see/download log files and enable debug logging<br>
-***v0.4.6*** Fixed thermostat low battery warnings, fixed iOS13 duplicate calling of setThermostatOperationgMode, some UI changes in diagnostic website<br>
-***v0.4.7*** Fixed null attribute on battery for thermostats<br>
-***v0.4.8*** Fixed setting Thermostat temperatures in auto mode, fixed Alarm Tile in Home App when HSM is disarmed with 'Disarm All' by RM, better detection of local_ip based on app_url host<br>
-***v0.4.9*** Fixed Alarm Tile reset when custom rule alert was canceled<br>
-***v0.4.10*** Fixed thermostat setpoint in auto mode for Thermostats<br>
-***v0.4.11*** Fixed exception on button events<br>
 # Explanation:
 
 ### Direct Updates
