@@ -166,6 +166,19 @@ When properly setup, you should see something like this in your Homebridge start
 
  * <p><u>debug</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
     Default to false<br>Enables debugging of HTTP calls to MakerAPI to troubleshoot issues</p>
+
+  * <p><u>dedupe_change_events_ms</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    If this is set to a value greater then 0, change events that are recieved will be deduped within the specified time period.  That last change event of the type recieved within the time period will be sent.  All intermediary change events will be squashed.  This is useful for some lights (inovelli) that transition colors.</p>  
+    
+  * <p><u>use_set_color</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    This turns on setColor processing and will combine setHue and setSaturation commands that are received within dedupe_command_delay_ms of each other.  This is useful for RGB lights that may have race conditions when receiving mulitple commands for a single color change.</p>  
+    
+    * <p><u>dedupe_command_delay_ms</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    The amount of time to wait for a second command.  This should be set to less then 1000.  50 or less is a good value
+    to use.  This is ONLY used for squash_on_commands or if use_set_color is set.</p>
+    
+    * <p><u>squash_on_commands</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
+    This is a list of commands that receive an 'on' command before the command to force it on before the command is set, this will squash the on command and just send the value command.  i.e. 'on' is sent before 'setLevel' when setting the brightness of the light.  use ['setLevel'] </p>
  
  * <p><u>logFile</u>  <small style="color: orange; font-weight: 600;"><i>Optional</i></small><br>
     Settings to enable logging to file. Uses winston logging facility 
