@@ -507,7 +507,7 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                     });
                 platform.addAttributeUsage('thermostatFanMode', device.deviceid, thisCharacteristic);
             }
-            if ((!(that.device.attributes.hasOwnProperty('battery'))) || (that.device.attributes.battery === null)) {
+            if (that.device.attributes.hasOwnProperty('battery') && that.device.attributes.battery !== null) {
                 that.getaddService(Service.BatteryService).setCharacteristic(Characteristic.StatusLowBattery, Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL);
                 that.getaddService(Service.BatteryService).setCharacteristic(Characteristic.ChargingState, Characteristic.ChargingState.NOT_CHARGING);
             }
