@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.4.11```**
+**```Current App version: 0.4.12```**
 
 ##### Table of Contents  
 **[Change Log](#change-log)**<br>
@@ -54,6 +54,8 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.4.9*** Fixed Alarm Tile reset when custom rule alert was canceled<br>
 ***v0.4.10*** Fixed thermostat setpoint in auto mode for Thermostats<br>
 ***v0.4.11*** Fixed exception on button events<br>
+***v0.4.12*** Validation of values for accessoires to prevent warning messages in Homebridge 1.3<br>
+
 # Explanation:
 
 ### Direct Updates
