@@ -1,5 +1,5 @@
 {
-    "name": "homebridge-hubitat-makerapi",
+    "name": "homebridge-hubitat-makerapi-godofcpu",
     "description": "Hubitat plugin for HomeBridge with MakerAPI",
     "version": "0.4.12",
     "license": "Apache 2.0",
@@ -24,7 +24,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/danTapps/homebridge-hubitat-makerapi.git"
+        "url": "https://github.com/godofcpu/homebridge-hubitat-makerapi.git"
     },
     "engines": {
         "node": ">=8.6.0",
