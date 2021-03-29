@@ -350,8 +350,10 @@ HE_ST_Platform.prototype = {
             for (var i = 0; i < devices.length; i++) {
                 var device = devices[i];
                 var group = "device";
-                if (device.type) 
-                    group = device.type;
+                if (device.type)
+                    if (device.type.match(/^(device|mode|reboot|alarmSystem)$/)) {
+                        group = device.type;
+                    }
                 var deviceData = null;
                 if (device.data)
                     deviceData = device.data;
