@@ -4,7 +4,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 
 [![npm version](https://badge.fury.io/js/homebridge-hubitat-makerapi.svg)](https://badge.fury.io/js/homebridge-hubitat-makerapi)
 
-**```Current App version: 0.4.14```**
+**```Current App version: 0.4.15```**
 
 ##### Table of Contents  
 **[Change Log](#change-log)**<br>
@@ -57,6 +57,7 @@ This is based off of @tonesto7 homebridge-hubitat-tonesto7
 ***v0.4.12*** Validation of values for accessoires to prevent warning messages in Homebridge 1.3<br>
 ***v0.4.13*** Fixed null reference for validation of values<br>
 ***v0.4.14*** Fix for newer output on MakerAPI with version 2.2.6<br>
+***v0.4.15*** Fixed error on Hubitat reboot<br>
 # Explanation:
 
 ### Direct Updates
