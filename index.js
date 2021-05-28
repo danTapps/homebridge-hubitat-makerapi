@@ -350,8 +350,10 @@ HE_ST_Platform.prototype = {
             for (var i = 0; i < devices.length; i++) {
                 var device = devices[i];
                 var group = "device";
-                if (device.type) 
-                    group = device.type;
+                if (device.type)
+                    if (device.type.match(/^(device|mode|reboot|alarmSystem)$/)) {
+                        group = device.type;
+                    }
                 var deviceData = null;
                 if (device.data)
                     deviceData = device.data;
@@ -368,9 +370,9 @@ HE_ST_Platform.prototype = {
         var that = this;
         return new Promise(function(resolve, reject) {
             if ((that.communication_broken) && (!that.firstpoll)) {
-                that.log('Updating attrbutes via HTTP');
+                that.log('Updating attributes via HTTP');
                 for (var i = 0; i < devices.length; i++) {
-                    if (devices[i].type !== undefined) {
+                    if (devices[i].data !== undefined) {
                         if (that.deviceLookup[uuidGen(devices[i].data.deviceid)] instanceof HE_ST_Accessory)
                         {
                             var accessory = that.deviceLookup[uuidGen(devices[i].data.deviceid)];
