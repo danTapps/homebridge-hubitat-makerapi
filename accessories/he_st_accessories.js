@@ -511,8 +511,12 @@ function HE_ST_Accessory(platform, group, device, accessory) {
                 platform.addAttributeUsage('thermostatFanMode', device.deviceid, thisCharacteristic);
             }
             if ((!(that.device.attributes.hasOwnProperty('battery'))) || (that.device.attributes.battery === null)) {
-                that.getaddService(Service.BatteryService).setCharacteristic(Characteristic.StatusLowBattery, Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL);
-                that.getaddService(Service.BatteryService).setCharacteristic(Characteristic.ChargingState, Characteristic.ChargingState.NOT_CHARGING);
+	        var battServ = Service.BatteryService;
+        	if (battServ === undefined) {
+            		battServ = Service.Battery; 
+        	}
+		that.getaddService(battServ).setCharacteristic(Characteristic.StatusLowBattery, Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL);
+                that.getaddService(battServ).setCharacteristic(Characteristic.ChargingState, Characteristic.ChargingState.NOT_CHARGING);
             }
             that.getaddService(Service.Thermostat).addOptionalCharacteristic(Characteristic.StatusActive);
             that.getaddService(Service.Thermostat).setCharacteristic(Characteristic.StatusActive, true);
@@ -1038,7 +1042,8 @@ function HE_ST_Accessory(platform, group, device, accessory) {
     if (that.device.attributes.hasOwnProperty('battery') && that.device.attributes.battery !== null) {
         var battServ = Service.BatteryService;
         if (battServ === undefined) {
-            battServ = Service.Battery; }
+            battServ = Service.Battery; 
+	}
         that.deviceGroup = "battery";
         thisCharacteristic = that.getaddService(battServ).getCharacteristic(Characteristic.BatteryLevel)
             .on('get', function(callback) {
