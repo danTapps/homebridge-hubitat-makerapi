@@ -1590,6 +1590,36 @@ function convertAlarmState(value, valInt = false) {
     }
 }
 
+// Invoke a characteristic's registered 'get' listener and push the resulting
+// value via updateValue(). Needed for HAP-NodeJS 2.x where `.getValue()` no
+// longer exists and bare property reads don't broadcast to HAP subscribers,
+// which caused remote Home.app tiles to stay stale on attribute changes.
+function pushCharacteristic(c) {
+    if (!c) return;
+    var listeners = (typeof c.listeners === "function") ? c.listeners('get') : [];
+    if (!listeners || listeners.length === 0) return;
+    try {
+        listeners[0].call(c, function(err, value) {
+            if (err == null && value !== undefined && value !== null) {
+                c.updateValue(value);
+            }
+        });
+    } catch (e) {
+        // Skip characteristics without a usable get handler.
+    }
+}
+
+function pushAllCharacteristics(accessory) {
+    if (!accessory || !accessory.services) return;
+    for (var i = 0; i < accessory.services.length; i++) {
+        var chars = accessory.services[i].characteristics;
+        if (!chars) continue;
+        for (var j = 0; j < chars.length; j++) {
+            pushCharacteristic(chars[j]);
+        }
+    }
+}
+
 function updateAttributes(data, platform, myObject) {
     var that = this;
     //platform.log('updateAttributes', data, that);
@@ -1600,18 +1630,10 @@ function updateAttributes(data, platform, myObject) {
                 that.device.attributes[key] = data.attributes[key];
             }
         }
-        
+
     }
     //that.device.attributes = data.attributes;
-    for (var i = 0; i < that.accessory.services.length; i++) {
-        for (var j = 0; j < that.accessory.services[i].characteristics.length; j++) {
-            if (typeof that.accessory.services[i].characteristics[j].getValue !== "undefined") { 
-                that.accessory.services[i].characteristics[j].getValue();
-            } else {
-                that.accessory.services[i].characteristics[j].value;
-            }
-        }
-    }
+    pushAllCharacteristics(that.accessory);
 }
 
 function loadData(data, myObject) {
@@ -1621,15 +1643,7 @@ function loadData(data, myObject) {
     }
     if (data !== undefined) {
         this.device = data;
-        for (var i = 0; i < that.accessory.services.length; i++) {
-            for (var j = 0; j < that.accessory.services[i].characteristics.length; j++) {
-                if (typeof that.accessory.services[i].characteristics[j].getValue !== "undefined") {
-                    that.accessory.services[i].characteristics[j].getValue();
-                } else {
-                    that.accessory.services[i].characteristics[j].value;
-                }
-            }
-        }
+        pushAllCharacteristics(that.accessory);
     } else {
         this.log.debug('Fetching Device Data');
         this.platform.api.getDevice(this.deviceid, function(data) {
@@ -1637,15 +1651,7 @@ function loadData(data, myObject) {
                 return;
             }
             this.device = data;
-            for (var i = 0; i < that.accessory.services.length; i++) {
-                for (var j = 0; j < that.accessory.services[i].characteristics.length; j++) {
-                    if (typeof that.accessory.services[i].characteristics[j].getValue !== "undefined") {
-                        that.accessory.services[i].characteristics[j].getValue();
-                    } else {
-                        that.accessory.services[i].characteristics[j].value;
-                    }
-                }
-            }
+            pushAllCharacteristics(that.accessory);
         });
     }
 }

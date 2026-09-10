@@ -784,12 +784,26 @@ HE_ST_Platform.prototype = {
                         myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.DOUBLE_PRESS);
                     else if ((attributeSet.attribute === 'held') && that.isProgrammableButton(attributeSet.device))
                         myUsage[j].updateValue(Characteristic.ProgrammableSwitchEvent.LONG_PRESS);
-                    else
-                        if (typeof myUsage[j].getValue !== "undefined") {
-                            myUsage[j].getValue();
-            		        } else {
-                            myUsage[j].value = attributeSet.value;
+                    else {
+                        // HAP-NodeJS 2.x: invoke the registered 'get' listener to compute
+                        // the HAP-formatted value from the just-updated attribute, then
+                        // push it via updateValue() so subscribed iOS Home Hubs receive
+                        // a real change event. The previous .getValue() / bare .value
+                        // assignment did not broadcast in HAP 2.x.
+                        var c = myUsage[j];
+                        var listeners = (typeof c.listeners === "function") ? c.listeners('get') : [];
+                        if (listeners && listeners.length > 0) {
+                            try {
+                                listeners[0].call(c, function(err, value) {
+                                    if (err == null && value !== undefined && value !== null) {
+                                        c.updateValue(value);
+                                    }
+                                });
+                            } catch (e) {
+                                // Skip characteristics without a usable get handler.
+                            }
                         }
+                    }
                 }
             }
         }
